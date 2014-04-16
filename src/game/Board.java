@@ -1,12 +1,10 @@
 package game;
 
-
 public class Board {
-	public static final int WHITEBAR = 24, BLACKBAR = 25, WHITEBEAROF = 26,
-			BLACKBEAROF = 27;
+	public static final int WHITEBAR = 24, BLACKBAR = 0, WHITEBEAROF = 25,
+			BLACKBEAROF = 26;
 
 	private Field[] fields;
-
 
 	public Board() {
 		// creating fields on the board
@@ -20,24 +18,24 @@ public class Board {
 
 		for (int i = 0; i < fields.length; i++) {
 			switch (i) {
-			case 0:
+			case 1:
 				fields[i] = new Field(Color.BLACK, 2);
 				break;
-			case 5:
-			case 12:
+			case 6:
+			case 13:
 				fields[i] = new Field(Color.WHITE, 5);
 				break;
-			case 7:
+			case 8:
 				fields[i] = new Field(Color.WHITE, 3);
 				break;
-			case 11:
-			case 18:
+			case 12:
+			case 19:
 				fields[i] = new Field(Color.BLACK, 5);
 				break;
-			case 16:
+			case 17:
 				fields[i] = new Field(Color.BLACK, 3);
 				break;
-			case 23:
+			case 24:
 				fields[i] = new Field(Color.WHITE, 2);
 				break;
 
@@ -50,12 +48,38 @@ public class Board {
 			System.out.println(fields[i]);
 		}
 	}
-	
+
 	public void move(int position, int amount, Color curPlayer) {
-			fields[position].takePiece();
-			fields[position + amount].putPiece(curPlayer);
+		fields[position].takePiece();
+		fields[position + amount].putPiece(curPlayer);
 	}
-	
+
+	public void captureMove(int position, int amount, Color curPlayer) {
+		// taking away captured piece
+		fields[position + amount].takePiece();
+		// if current player moving is white then black was captured and vice
+		// versa
+		if (curPlayer == Color.WHITE) {
+			fields[BLACKBAR].putPiece(Color.BLACK);
+		} else {
+			fields[WHITEBAR].putPiece(Color.WHITE);
+		}
+
+		// make original move
+		fields[position].takePiece();
+		fields[position + amount].putPiece(curPlayer);
+	}
+
+	public void bearOfMove(int position, int amount, Color curPlayer) {
+		// taking away piece to bear off
+		fields[position].takePiece();
+		// if current player moving is white then move of white, same for black
+		if (curPlayer == Color.WHITE) {
+			fields[WHITEBEAROF].putPiece(Color.WHITE);
+		} else {
+			fields[BLACKBEAROF].putPiece(Color.BLACK);
+		}
+	}
 
 	public Field[] getFields() {
 		return fields;
