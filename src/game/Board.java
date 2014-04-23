@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 public class Board {
 	public static final int WHITEBAR = 0, BLACKBAR = 25, WHITEBEAROF = 26,
-			BLACKBEAROF = 27, TOTAL = 28, PLAYABLE = 26; // 0-25
+			BLACKBEAROF = 27, TOTAL_NO_OF_FIELDS = 28,
+			NO_OF_PLAYABLE_FIELDS = 26; // 0-25
 
 	private Color[] colorArray;
 	private int[] amountArray;
@@ -24,11 +25,12 @@ public class Board {
 		// 2 for taken away from board pieces (bear off),
 		// [id] 26/27 white/black
 		// total 28
-		colorArray = new Color[TOTAL];
-		amountArray = new int[TOTAL];
+		colorArray = new Color[TOTAL_NO_OF_FIELDS];
+		amountArray = new int[TOTAL_NO_OF_FIELDS];
 		validMoves = new ArrayList<Move>();
 
-		for (int i = 0; i < TOTAL; i++) {
+		// create default field
+		for (int i = 0; i < TOTAL_NO_OF_FIELDS; i++) {
 			switch (i) {
 			case 1:
 				colorArray[i] = Color.WHITE;
@@ -107,14 +109,21 @@ public class Board {
 	}
 
 	public boolean getPossibleMoves() {
-		boolean barFlag = true;
+		
 		evalDices();
+		getValidMoves();
+		// if no possible moves turn changes
+		if (validMoves.size() == 0)
+			return false;
+		return true;
+	}
 
-		System.out.println(possibleMoves);
+	private void getValidMoves() {
+		boolean barFlag = true;
 
 		// playable area, going through all fields
-		for (int i = 0; i < PLAYABLE; i++) {
-			// move own color check
+		for (int i = 0; i < NO_OF_PLAYABLE_FIELDS; i++) {
+			// move own piece check
 			if (colorArray[i] == currPlayer && amountArray[i] > 0) {
 				for (Integer amount : possibleMoves) {
 					// but bear off move is weird
@@ -122,7 +131,8 @@ public class Board {
 					if (allAtHome(currPlayer)) {
 						// bear of move
 						// goes of the grid
-						if ((i + amount) > 24 || (i + amount) < 0) {
+						if ((i + amount) >= BLACKBAR
+								|| (i + amount) <= WHITEBAR) {
 							validMoves
 									.add(new Move(MoveType.BEAROFF, i, amount));
 						}
@@ -130,10 +140,9 @@ public class Board {
 
 					// boundary check
 					// has to be playable area only
-
-					if ((i + amount) < PLAYABLE && (i + amount) > 0) {
-						// pieces from bar have to be moved first
-
+					// move to: for white up untill BlackBar, for black up until
+					// WHITEBAR
+					if ((i + amount) < BLACKBAR && (i + amount) > WHITEBAR) {
 						// move to own color or empty
 						if (colorArray[i + amount] == currPlayer
 								|| colorArray[i + amount] == Color.NONE) {
@@ -149,7 +158,8 @@ public class Board {
 				}
 			}
 			// only moves from bar are allowed if it is not empty
-			if (barNotEmpty(currPlayer)&&barFlag) {
+			if (barNotEmpty(currPlayer) && barFlag) {
+				// counter will get increased by 1
 				i = BLACKBAR - 1;
 				barFlag = false;
 			}
@@ -161,10 +171,7 @@ public class Board {
 			System.out.println("[" + i + "] " + validMoves.get(i).toString());
 		}
 		System.out.println();
-		// if no valid moves turn changes
-		if (validMoves.size() == 0)
-			return false;
-		return true;
+
 	}
 
 	public Color[] getColorArray() {
@@ -217,7 +224,9 @@ public class Board {
 
 	public void evalDices() {
 		possibleMoves = new ArrayList<Integer>();
-
+		// if no more dices left, possible moves = null, no valid moves
+		if (dices == null)
+			return;
 		if (dices.length == 2) {
 			if (dices[0] == dices[1]) {
 				possibleMoves.add(dices[0]);

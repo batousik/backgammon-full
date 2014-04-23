@@ -30,12 +30,12 @@ public class Game extends JFrame {
 			dice.trowDices();
 			board.setDices(dice.getDices());
 			board.setPlayers(isWhite);
-			movesLeft = true;
-
+			movesLeft = board.getPossibleMoves();
+			
 			while(movesLeft) {
 				draw();
 				
-				board.getPossibleMoves();
+				
 				
 				System.out.print(isWhite + " Enter choice");
 			
@@ -48,8 +48,7 @@ public class Game extends JFrame {
 					e.printStackTrace();
 				}
 				board.move(userInput);
-				
-				movesLeft = board.isMovesLeft();
+				movesLeft = board.getPossibleMoves();
 			}
 			
 			changePlayer();
