@@ -1,3 +1,4 @@
+package main;
 import game.Game;
 
 

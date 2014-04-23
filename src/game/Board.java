@@ -112,6 +112,41 @@ public class Board {
 		}
 		System.out.println(validMoves);
 	}
+	
+	public void getPossibleMoves2() {
+		evalDices();
+		System.out.println(possibleMoves);
+		for (int i = 0; i < TOTAL; i++) {
+			if (colorArray[i] == Color.WHITE) {
+				for (Integer amount : possibleMoves) {
+					// boundary check
+					// has to be playable area only
+					// but bear off move is weird
+					if ((i + amount) < TOTAL) {
+						// move own pieces check
+						if (colorArray[i] == Color.WHITE) {
+							// bear of move
+							// enter move
+							// move to own color or empty
+							if (colorArray[i + amount] == Color.WHITE
+									|| colorArray[i + amount] == Color.NONE) {
+								validMoves.add(new Move(MoveType.NORMAL, i, i
+										+ amount, amount));
+								// hit move
+							} else if (colorArray[i + amount] == Color.BLACK
+									|| amountArray[i + amount] == 1) {
+								validMoves.add(new Move(MoveType.CAPTURE, i, i
+										+ amount, amount));
+							}
+						}
+					}
+				}
+			}
+		}
+		System.out.println(validMoves);
+	}
+	
+	
 
 	public void setDices(int[] dices) {
 		if (dices[0] == dices[1]) {
