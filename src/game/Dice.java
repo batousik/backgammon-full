@@ -1,6 +1,5 @@
 package game;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 public class Dice {
@@ -21,17 +20,4 @@ public class Dice {
 		return new int[]{diceX,diceY};
 	}
 
-//	public ArrayList<Integer> getEvalValue() {
-//		returnVals = new ArrayList<Integer>();
-//		if (diceX == diceY) {
-//			for (int i = 0; i < 4; i++) {
-//				returnVals.add(diceX);
-//			}
-//			return returnVals;
-//		} else {
-//			returnVals.add(diceX);
-//			returnVals.add(diceY);
-//			return returnVals;
-//		}
-//	}
 }

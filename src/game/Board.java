@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class Board {
 	public static final int WHITEBAR = 0, BLACKBAR = 25, WHITEBEAROF = 26,
-			BLACKBEAROF = 27, TOTAL = 28;
+			BLACKBEAROF = 27, TOTAL = 28, PLAYABLE = 26; // 0-25
 
 	private Color[] colorArray;
 	private int[] amountArray;
@@ -12,6 +12,9 @@ public class Board {
 	private ArrayList<Move> validMoves;
 	private ArrayList<Integer> possibleMoves;
 	private int[] dices;
+
+	private Color opponent;
+	private Color currPlayer;
 
 	public Board() {
 		// creating fields on the board
@@ -57,16 +60,31 @@ public class Board {
 				amountArray[i] = 1;
 				// 2
 				break;
-
+			case WHITEBEAROF:
+				colorArray[i] = Color.WHITE;
+				amountArray[i] = 0;
+				break;
+			case BLACKBEAROF:
+				colorArray[i] = Color.BLACK;
+				amountArray[i] = 0;
+				break;
+			case WHITEBAR:
+				colorArray[i] = Color.WHITE;
+				amountArray[i] = 0;
+				break;
+			case BLACKBAR:
+				colorArray[i] = Color.BLACK;
+				amountArray[i] = 0;
+				break;
 			default:
 				colorArray[i] = Color.NONE;
 				amountArray[i] = 0;
 				break;
 			}
 		}
-		for (int i = 0; i < 28; i++) {
-			System.out.println(colorArray[i] + " " + amountArray[i]);
-		}
+		// for (int i = 0; i < 28; i++) {
+		// System.out.println(colorArray[i] + " " + amountArray[i]);
+		// }
 	}
 
 	public boolean isMovesLeft() {
@@ -74,113 +92,141 @@ public class Board {
 			return false;
 		return true;
 	}
-	// public void move(int position, int amount, Color curPlayer) {
-	// fields[position].takePiece();
-	// fields[position + amount].putPiece(curPlayer);
-	// }
 
-	public void getPossibleMoves() {
+	public void setPlayers(boolean isWhite) {
+		if (isWhite) {
+			currPlayer = Color.WHITE;
+			opponent = Color.BLACK;
+		} else {
+			currPlayer = Color.BLACK;
+			opponent = Color.WHITE;
+			for (int i = 0; i < dices.length; i++) {
+				dices[i] *= (-1);
+			}
+		}
+	}
+
+	public boolean getPossibleMoves() {
+		boolean barFlag = true;
 		evalDices();
+
 		System.out.println(possibleMoves);
-		for (int i = 0; i < TOTAL; i++) {
-			// WHITE ONLY
-			if (colorArray[i] == Color.WHITE) {
+
+		// playable area, going through all fields
+		for (int i = 0; i < PLAYABLE; i++) {
+			// move own color check
+			if (colorArray[i] == currPlayer && amountArray[i] > 0) {
 				for (Integer amount : possibleMoves) {
+					// but bear off move is weird
+
+					if (allAtHome(currPlayer)) {
+						// bear of move
+						// goes of the grid
+						if ((i + amount) > 24 || (i + amount) < 0) {
+							validMoves
+									.add(new Move(MoveType.BEAROFF, i, amount));
+						}
+					}
+
 					// boundary check
 					// has to be playable area only
-					// but bear off move is weird
-					if ((i + amount) < TOTAL) {
-						// move own pieces check
-						if (colorArray[i] == Color.WHITE) {
-							// bear of move
 
-							// move to own color or empty
-							if (colorArray[i + amount] == Color.WHITE
-									|| colorArray[i + amount] == Color.NONE) {
-								validMoves.add(new Move(MoveType.NORMAL, i, i
-										+ amount, amount));
-								// hit move
-							} else if (colorArray[i + amount] == Color.BLACK
-									|| amountArray[i + amount] == 1) {
-								validMoves.add(new Move(MoveType.CAPTURE, i, i
-										+ amount, amount));
-							}
+					if ((i + amount) < PLAYABLE && (i + amount) > 0) {
+						// pieces from bar have to be moved first
+
+						// move to own color or empty
+						if (colorArray[i + amount] == currPlayer
+								|| colorArray[i + amount] == Color.NONE) {
+							validMoves
+									.add(new Move(MoveType.NORMAL, i, amount));
+							// hit move
+						} else if (colorArray[i + amount] == opponent
+								&& amountArray[i + amount] == 1) {
+							validMoves
+									.add(new Move(MoveType.CAPTURE, i, amount));
 						}
 					}
 				}
 			}
+			// only moves from bar are allowed if it is not empty
+			if (barNotEmpty(currPlayer)&&barFlag) {
+				i = BLACKBAR - 1;
+				barFlag = false;
+			}
+
 		}
-		System.out.println(validMoves);
+
+		System.out.println();
+		for (int i = 0; i < validMoves.size(); i++) {
+			System.out.println("[" + i + "] " + validMoves.get(i).toString());
+		}
+		System.out.println();
+		// if no valid moves turn changes
+		if (validMoves.size() == 0)
+			return false;
+		return true;
 	}
-	
-	public void getPossibleMoves2() {
-		evalDices();
-		System.out.println(possibleMoves);
-		for (int i = 0; i < TOTAL; i++) {
-			if (colorArray[i] == Color.WHITE) {
-				for (Integer amount : possibleMoves) {
-					// boundary check
-					// has to be playable area only
-					// but bear off move is weird
-					if ((i + amount) < TOTAL) {
-						// move own pieces check
-						if (colorArray[i] == Color.WHITE) {
-							// bear of move
-							// enter move
-							// move to own color or empty
-							if (colorArray[i + amount] == Color.WHITE
-									|| colorArray[i + amount] == Color.NONE) {
-								validMoves.add(new Move(MoveType.NORMAL, i, i
-										+ amount, amount));
-								// hit move
-							} else if (colorArray[i + amount] == Color.BLACK
-									|| amountArray[i + amount] == 1) {
-								validMoves.add(new Move(MoveType.CAPTURE, i, i
-										+ amount, amount));
-							}
-						}
-					}
+
+	public Color[] getColorArray() {
+		return colorArray;
+	}
+
+	public int[] getAmountArray() {
+		return amountArray;
+	}
+
+	private boolean barNotEmpty(Color currPlayer) {
+		if ((currPlayer == Color.WHITE && amountArray[WHITEBAR] != 0)
+				|| (currPlayer == Color.BLACK && amountArray[BLACKBAR] != 0))
+			return true;
+		return false;
+	}
+
+	private boolean allAtHome(Color homePlayer) {
+		// checks that no pieces of player color are outside home area
+		// home for white 19-24 inclusive
+		switch (homePlayer) {
+		case WHITE:
+			for (int i = WHITEBAR; i < 19; i++) {
+				if (colorArray[i] == Color.WHITE) {
+					return false;
 				}
 			}
+			break;
+		// home for black 1-6 inclusive
+		case BLACK:
+			for (int i = BLACKBAR; i > 6; i--) {
+				if (colorArray[i] == Color.WHITE) {
+					return false;
+				}
+			}
+			break;
+		default:
+			break;
 		}
-		System.out.println(validMoves);
+		return true;
 	}
-	
-	
 
 	public void setDices(int[] dices) {
 		if (dices[0] == dices[1]) {
 			this.dices = new int[] { dices[0], dices[0], dices[0], dices[0] };
 		} else {
-			this.dices = new int[] { dices[0], dices[1] };
+			this.dices = dices;
 		}
 	}
 
 	public void evalDices() {
 		possibleMoves = new ArrayList<Integer>();
 
-		switch (dices.length) {
-		case 4:
-			for (int i = 1; i < 5; i++) {
-				possibleMoves.add(dices[0] * i);
+		if (dices.length == 2) {
+			if (dices[0] == dices[1]) {
+				possibleMoves.add(dices[0]);
+			} else {
+				possibleMoves.add(dices[0]);
+				possibleMoves.add(dices[1]);
 			}
-			break;
-		case 3:
-			for (int i = 1; i < 4; i++) {
-				possibleMoves.add(dices[0] * i);
-			}
-			break;
-		case 2:
+		} else {
 			possibleMoves.add(dices[0]);
-			possibleMoves.add(dices[1]);
-			possibleMoves.add(dices[1] + dices[0]);
-			break;
-		case 1:
-			possibleMoves.add(dices[0]);
-			break;
-
-		default:
-			break;
 		}
 	}
 
@@ -191,8 +237,8 @@ public class Board {
 		switch (chosenMove.getMoveType()) {
 		case NORMAL:
 			// make normal move
-			amountArray[start] = amountArray[start] - 1;
-			amountArray[end] = amountArray[end] + 1;
+			amountArray[start] -= 1;
+			amountArray[end] += 1;
 
 			// check if field is left empty
 			if (amountArray[start] == 0)
@@ -200,10 +246,10 @@ public class Board {
 
 			// check if moved to empty field
 			if (colorArray[end] == Color.NONE)
-				colorArray[end] = Color.WHITE;
+				colorArray[end] = currPlayer;
 			break;
 		case CAPTURE:
-			amountArray[start] = amountArray[start] - 1;
+			amountArray[start] -= 1;
 			// amount at [end] stays same
 
 			// check if field is left empty
@@ -211,8 +257,26 @@ public class Board {
 				colorArray[start] = Color.NONE;
 
 			// change color after capturing field
-			colorArray[end] = Color.WHITE;
+			colorArray[end] = currPlayer;
+
+			// capture piece
+			if (currPlayer == Color.WHITE) {
+				amountArray[BLACKBAR] += 1;
+			} else {
+				amountArray[WHITEBAR] += 1;
+			}
 			break;
+		case BEAROFF:
+			amountArray[start] -= 1;
+			if (currPlayer == Color.WHITE) {
+				amountArray[WHITEBEAROF] += 1;
+			} else {
+				amountArray[BLACKBEAROF] += 1;
+			}
+			// check if field is left empty
+			if (amountArray[start] == 0)
+				colorArray[start] = Color.NONE;
+			// TODO
 		default:
 			break;
 		}
@@ -221,45 +285,18 @@ public class Board {
 	}
 
 	private void useMove(int moveAmount) {
-
-		int diceAddUp = 0;
-		
 		switch (dices.length) {
 		case 4:
-			if (moveAmount == dices[0]) {
-				dices = new int[]{dices[0],dices[0],dices[0]};
-			} else if (moveAmount == (dices[0]*2)){
-				dices = new int[]{dices[0],dices[0]};
-			} else if (moveAmount == (dices[0]*3)){
-				dices = new int[]{dices[0]};
-			} else {
-				dices = null;
-			}
-
-			// check 1*1 = amount, trough away 1, left 2,3,4
-			// check 1*2 = amount, left 3,4
-			// check 1*3 = amount, left 4
-			// no more moves
+			dices = new int[] { dices[0], dices[0], dices[0] };
 			break;
 		case 3:
-			if (moveAmount == dices[0]) {
-				dices = new int[]{dices[0],dices[0]};
-			} else if (moveAmount == (dices[0]*2)){
-				dices = new int[]{dices[0]};
-			} else {
-				dices = null;
-			}
-			// check 1 = amount, trough away 1, left 2,3
-			// check 1*2 = amount, through away 1,2 left 3
-			// no more moves
+			dices = new int[] { dices[0], dices[0] };
 			break;
 		case 2:
 			if (moveAmount == dices[0]) {
-				dices = new int[]{dices[1]};
-			} else if (moveAmount == (dices[1])){
-				dices = new int[]{dices[0]};
+				dices = new int[] { dices[1] };
 			} else {
-				dices = null;
+				dices = new int[] { dices[0] };
 			}
 			// check 1st = amount, trough away 1, left 2
 			// check 2nd = amount, viceversa
@@ -275,34 +312,4 @@ public class Board {
 		}
 	}
 
-	// public void captureMove(int position, int amount, Color curPlayer) {
-	// // taking away captured piece
-	// fields[position + amount].takePiece();
-	// // if current player moving is white then black was captured and vice
-	// // versa
-	// if (curPlayer == Color.WHITE) {
-	// fields[BLACKBAR].putPiece(Color.BLACK);
-	// } else {
-	// fields[WHITEBAR].putPiece(Color.WHITE);
-	// }
-	//
-	// // make original move
-	// fields[position].takePiece();
-	// fields[position + amount].putPiece(curPlayer);
-	// }
-	//
-	// public void bearOfMove(int position, int amount, Color curPlayer) {
-	// // taking away piece to bear off
-	// fields[position].takePiece();
-	// // if current player moving is white then move of white, same for black
-	// if (curPlayer == Color.WHITE) {
-	// fields[WHITEBEAROF].putPiece(Color.WHITE);
-	// } else {
-	// fields[BLACKBEAROF].putPiece(Color.BLACK);
-	// }
-	// }
-	//
-	// public Field[] getFields() {
-	// return fields;
-	// }
 }
