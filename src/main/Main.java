@@ -1,11 +1,12 @@
 package main;
 
 import game.Game;
+import gui.MainWindow;
 
 public class Main {
 	public static void main(String[] args){
-		
-		Game b = new Game();
+		MainWindow mw = new MainWindow();
+		//Game b = new Game();
 		// yo installed egit
 	}
 }
