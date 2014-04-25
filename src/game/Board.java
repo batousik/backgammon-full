@@ -35,18 +35,15 @@ public class Board {
 			case 1:
 				colorArray[i] = Color.WHITE;
 				amountArray[i] = 2;
-				// 2
 				break;
 			case 6:
 			case 13:
 				colorArray[i] = Color.BLACK;
-				amountArray[i] = 1;
-				// 5
+				amountArray[i] = 5;
 				break;
 			case 8:
 				colorArray[i] = Color.BLACK;
-				amountArray[i] = 1;
-				// 3
+				amountArray[i] = 3;
 				break;
 			case 12:
 			case 19:
@@ -59,8 +56,7 @@ public class Board {
 				break;
 			case 24:
 				colorArray[i] = Color.BLACK;
-				amountArray[i] = 1;
-				// 2
+				amountArray[i] = 2;
 				break;
 			case WHITEBEAROF:
 				colorArray[i] = Color.WHITE;
