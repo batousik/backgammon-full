@@ -321,7 +321,9 @@ public class MainWindow extends JFrame implements ActionListener, ItemListener,
 			currStone++;
 		}
 	}
-
+	/**
+	 * TODO: COMMENT BICH
+	 */
 	private void changePlayer() {
 		if (isWhite) {
 			isWhite = false;
