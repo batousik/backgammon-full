@@ -1,6 +1,7 @@
 package server;
 
 import game.Game;
+import game.Move;
 
 public class BackgammonProtocol {
 	private static final int WAITING_FOR_CLIENT = 0;
@@ -19,9 +20,14 @@ public class BackgammonProtocol {
 			return "ok";
 		}
 		if (state == SENDING_MOVES) {
-			game.play(input);
+			game.play(parseInput(input));
 			return game.getMoveMade();
 		}
 		return null;
+	}
+	
+	public Move parseInput(String input) {
+		String[] split = input.split(":");
+		String[] startEnd = split[1].split(",");
 	}
 }

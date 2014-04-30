@@ -21,19 +21,22 @@ public class Game extends JFrame {
 	public Game() {
 		dice = new Dice();
 		board = new Board();
-		isWhite = true;
 	}
 	
-	public void play(String opponentMove) {
+	public void play(Move opponentMove) {
 			dice.trowDices();
 			board.setDices(dice.getDices());
-			board.setPlayers(isWhite);
+			board.setPlayers(true);
 			movesLeft = board.getPossibleMoves();
-			new AI(board);
+			
+			
+			
 			changePlayer();
+			new AI(board);
 	}
 	
 	public String getMoveMade() {
+		
 	}
 
 	private void draw() {
