@@ -1,6 +1,5 @@
 package main;
 
-import game.Game;
 import gui.MainWindow;
 
 
