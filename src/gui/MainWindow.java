@@ -23,7 +23,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
-
 /**
  * @author 130017964
  * @version 4.20(release)
@@ -35,18 +34,16 @@ public class MainWindow extends JFrame implements ActionListener,
 	 */
 	private static final long serialVersionUID = 1L;
 
-	
-	
 	// gui positioning constants
 	private static final int LEFT_BOUNDARY = 50;
-	private static final int RIGHT_BOUNDARY = 660;
+	private static final int RIGHT_BOUNDARY = 710;
 	private static final int TOP_BOUNDARY = 50;
 	private static final int BOTTOM_BOUNDARY = 510;
-	private static final int HORIZONTAL_HALFWAY = 250;
+	private static final int HORIZONTAL_HALFWAY = 300;
 	private static final int NUMBER_OF_STONES = 30;
 	private static final int STONE_SIZE = 40;
 	private static final int MAX_NO_PER_FIELD_NO_STACK = 6;
-	
+
 	// gui objects
 	private JPanel mainContentPane;
 	private JLayeredPane gamePanel;
@@ -55,24 +52,30 @@ public class MainWindow extends JFrame implements ActionListener,
 	private JMenu menuGameTitle, aboutGameTitle;
 	private JMenuItem newGame, exit, help;
 	private JLabel[] stones;
+	private JLabel[] highLights;
 	private Dimension preferredSize;
-	
-	// vars needed for stones 
+	private final ImageIcon blackStoneImg = new ImageIcon("SilverNSH.gif");
+	private final ImageIcon whiteStoneImg = new ImageIcon("GoldNSH.gif");
+	// TODO private final ImageIcon highlightIMG = new ImageIcon(".gif");
+	// TODO image for highLight
+	// TODO Change zones a little bit
+
+	// vars needed for stones
 	private int stoneDragged = NUMBER_OF_STONES;
 	private int clickX = 0;
 	private int clickY = 0;
 	private int initialX;
 	private int initialY;
-	private HashMap<game.Color, String> stoneImage;
+	private HashMap<game.Color, ImageIcon> stoneImage;
 	private HashMap<Integer, Zone> zones;
 	private HashMap<Integer, int[]> locations;
 	private int stackProportion;
-	
+
 	private Dice dice;
 	private Board board;
-	private boolean movesLeft;
+	private boolean isMovesLeft;
 	private boolean isWhite;
-	
+
 	private int currStone;
 	private int chosenMove;
 
@@ -87,9 +90,11 @@ public class MainWindow extends JFrame implements ActionListener,
 		initLocs();
 		// create zones for each field for dropping stones
 		initFieldZones();
+		// creating highlight objects to show where it is valid to put a piece
+		initHighLights();
 		// Initializing the actual game, game logic
 		initBackgammon();
-		
+
 		// no stone selected
 		currStone = NUMBER_OF_STONES;
 	}
@@ -171,7 +176,7 @@ public class MainWindow extends JFrame implements ActionListener,
 			stones[i].addMouseMotionListener(this);
 		}
 	}
-	
+
 	private void initBackgammon() {
 		// creating new dice object
 		dice = new Dice();
@@ -181,39 +186,62 @@ public class MainWindow extends JFrame implements ActionListener,
 		isWhite = true;
 		// throw and set dices for first move
 		dice.trowDices();
-		board.setDices(dice.getDices());
+		//TODO change to dices
+		//board.setDices(dice.getDices());
+		board.setDices(new int[] {6,6});
 		// set current player
 		board.setPlayers(isWhite);
 		// drawing stones to start locations
 		placeStones(board.getAmountArray(), board.getColorArray());
 		// evaluating first set of valid moves
-		movesLeft = board.getPossibleMoves();
+		board.searchForValideMoves();
+		isMovesLeft = board.isValidMovesLeft();
 	}
-	
+
+	private void initHighLights() {
+		highLights = new JLabel[Board.TOTAL_NO_OF_FIELDS];
+		Zone highLightZone;
+		for (int i = 0; i < Board.TOTAL_NO_OF_FIELDS; i++) {
+			highLights[i] = new JLabel();
+			highLightZone = zones.get(i);
+			highLights[i].setBounds(highLightZone.LEFT, highLightZone.TOP,
+					highLightZone.RIGHT - highLightZone.LEFT,
+					highLightZone.BOTTOM - highLightZone.TOP);
+			highLights[i].setOpaque(true);
+			highLights[i].setBackground(new Color(255, 255, 255));
+			highLights[i].setVisible(false);
+			// TODO make it into half see through
+			gamePanel.add(highLights[i]);
+		}
+	}
+
 	private void moveMade() {
 		board.move(chosenMove);
 		// redrawing board to keep stones nicely in the line
 		placeStones(board.getAmountArray(), board.getColorArray());
-		//TODO split mowesLeft to two voids
 		// moves left recalculates valid moves and says if any left
-		movesLeft = board.getPossibleMoves();
-		
+		board.searchForValideMoves();
+		isMovesLeft = board.isValidMovesLeft();
+
 		// if no possible moves left change the player
-		if (!movesLeft) {
+		if (!isMovesLeft) {
 			changeTurn();
 		}
 	}
-	
+
 	private void changeTurn() {
 		// swaps white for black and vice versa
 		changePlayer();
 		dice.trowDices();
-		board.setDices(dice.getDices());
+		//TODO change to dices
+		//board.setDices(dice.getDices());
+		board.setDices(new int[] {6,6});
 		board.setPlayers(isWhite);
-		//player changed recalculate player moves
-		movesLeft = board.getPossibleMoves();
+		// player changed recalculate player moves
+		board.searchForValideMoves();
+		isMovesLeft = board.isValidMovesLeft();
 	}
-	
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == exit) {
@@ -228,6 +256,8 @@ public class MainWindow extends JFrame implements ActionListener,
 		clickY = e.getY();
 		initialX = e.getComponent().getX();
 		initialY = e.getComponent().getY();
+		// highlights valid places to drop
+		highLightValidMoveToLocs();
 	}
 
 	/**
@@ -255,14 +285,20 @@ public class MainWindow extends JFrame implements ActionListener,
 
 		// no stone is dragged
 		stoneDragged = NUMBER_OF_STONES;
+		
+		//dehighlight highlited valid drop places
+		for (int i = 0; i<highLights.length; i++){
+			highLights[i].setVisible(false);
+		}
 	}
-
 
 	/**
 	 * Method checks if User moved Stone from and to a valid location
 	 * 
-	 * @param currLeftX top left corner of an object at the moment, X coordinate
-	 * @param currLeftY top left corner of an object at the moment, Y coordinate
+	 * @param currLeftX
+	 *            top left corner of an object at the moment, X coordinate
+	 * @param currLeftY
+	 *            top left corner of an object at the moment, Y coordinate
 	 * @return true for valid and false for an invalid move
 	 */
 	private boolean stonePlacedValidly(int currLeftX, int currLeftY) {
@@ -297,32 +333,53 @@ public class MainWindow extends JFrame implements ActionListener,
 		int yLoc;
 		int xLoc;
 
+		// if a stone is being dragged move it around
+		
 		if (stoneDragged >= 0 && stoneDragged < NUMBER_OF_STONES) {
 			xLoc = e.getComponent().getX() + e.getX() - clickX;
 			yLoc = e.getComponent().getY() + e.getY() - clickY;
 			stones[stoneDragged].setLocation(xLoc, yLoc);
-			if (stones[stoneDragged].getX() < LEFT_BOUNDARY)
-				stones[stoneDragged].setLocation(initialX, initialY);
-			if (stones[stoneDragged].getY() < TOP_BOUNDARY)
-				stones[stoneDragged].setLocation(initialX, initialY);
-			if (stones[stoneDragged].getX() > RIGHT_BOUNDARY)
-				stones[stoneDragged].setLocation(initialX, initialY);
-			if (stones[stoneDragged].getY() > BOTTOM_BOUNDARY)
-				stones[stoneDragged].setLocation(initialX, initialY);
+//			if (stones[stoneDragged].getX() < LEFT_BOUNDARY)
+//				stones[stoneDragged].setLocation(initialX, initialY);
+//			if (stones[stoneDragged].getY() < TOP_BOUNDARY)
+//				stones[stoneDragged].setLocation(initialX, initialY);
+//			if (stones[stoneDragged].getX() > RIGHT_BOUNDARY)
+//				stones[stoneDragged].setLocation(initialX, initialY);
+//			if (stones[stoneDragged].getY() > BOTTOM_BOUNDARY)
+//				stones[stoneDragged].setLocation(initialX, initialY);
 		}
 
 	}
 
+	private void highLightValidMoveToLocs() {
+		ArrayList<Move> moves = board.getValidMoves();
+		Zone startLoc;
+		for (int i = 0; i < moves.size(); i++) {
+			// finds where piece was taken from
+			startLoc = zones.get(moves.get(i).getStartField());
+			// if piece was taken from valid start zone
+			if (startLoc.isInZone(initialX, initialY)) {
+				// highlight valid drop places for curr move
+				highLights[moves.get(i).getEndField()].setVisible(true);
+				background.setComponentZOrder(highLights[moves.get(i).getEndField()], 0);
+			}
+		}
+	}
+
 	/**
-	 * Method places all stones round the board with given amount and colour
-	 * @param amountArray array that holds how many pieces at each field
-	 * @param colorArray array that holds color of the pieces at each field
+	 * Method places all stones round the board with given amount and color
+	 * 
+	 * @param amountArray
+	 *            array that holds how many pieces at each field
+	 * @param colorArray
+	 *            array that holds color of the pieces at each field
 	 */
 	private void placeStones(int[] amountArray, game.Color[] colorArray) {
 		currStone = 0;
-		for (int i = 0; i < Board.NO_OF_PLAYABLE_FIELDS; i++) {
+		for (int i = 0; i < Board.TOTAL_NO_OF_FIELDS; i++) {
 			if (amountArray[i] != 0) {
-				placeStonesOnAField(i, amountArray[i], stoneImage.get(colorArray[i]));
+				placeStonesOnAField(i, amountArray[i],
+						stoneImage.get(colorArray[i]));
 			}
 		}
 	}
@@ -334,18 +391,18 @@ public class MainWindow extends JFrame implements ActionListener,
 	 * @param amount
 	 * @param picture
 	 */
-	private void placeStonesOnAField(int fieldID, int amount, String picture) {
-		// if more than MAX_NO_PER_FIELD_NO_STACK, then stack stones 
+	private void placeStonesOnAField(int fieldID, int amount, ImageIcon picture) {
+		// if more than MAX_NO_PER_FIELD_NO_STACK, then stack stones
 		if (amount > MAX_NO_PER_FIELD_NO_STACK) {
-			stackProportion = 240/amount;
+			stackProportion = MAX_NO_PER_FIELD_NO_STACK * STONE_SIZE / amount;
 		} else {
-			stackProportion = 40;
+			stackProportion = STONE_SIZE;
 		}
 		for (int i = 0; i < amount; i++) {
-			//TODO create image icons at start
-			stones[currStone].setIcon(new ImageIcon(picture));
-			
-			if (fieldID < 13) {
+			// TODO create image icons at start
+			stones[currStone].setIcon(picture);
+
+			if (fieldID < 13 || fieldID == 27) {
 				stones[currStone].setLocation(locations.get(fieldID)[0],
 						locations.get(fieldID)[1] - i * stackProportion);
 			} else {
@@ -355,7 +412,6 @@ public class MainWindow extends JFrame implements ActionListener,
 			currStone++;
 		}
 	}
-
 
 	// simply changes current player
 	private void changePlayer() {
@@ -368,9 +424,9 @@ public class MainWindow extends JFrame implements ActionListener,
 
 	// sets images for stones
 	private void initStoneColors() {
-		stoneImage = new HashMap<game.Color, String>();
-		stoneImage.put(game.Color.BLACK, "SilverNSH.gif");
-		stoneImage.put(game.Color.WHITE, "GoldNSH.gif");
+		stoneImage = new HashMap<game.Color, ImageIcon>();
+		stoneImage.put(game.Color.BLACK, blackStoneImg);
+		stoneImage.put(game.Color.WHITE, whiteStoneImg);
 	}
 
 	// Creating zones for fields on a board for dropping stones
@@ -416,10 +472,13 @@ public class MainWindow extends JFrame implements ActionListener,
 		zones.put(25,
 				new Zone(350, 399, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
 		// bear offs
+		// white top
 		zones.put(26,
 				new Zone(700, 749, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
+		//black bottom
 		zones.put(27, new Zone(700, 749, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
 	}
+
 	// Creating location for each field to place stones nicely
 	private void initLocs() {
 		locations = new HashMap<Integer, int[]>();
@@ -449,18 +508,27 @@ public class MainWindow extends JFrame implements ActionListener,
 		locations.put(23, new int[] { 605, 51 });
 		locations.put(24, new int[] { 655, 51 });
 		locations.put(25, new int[] { 355, 51 });
+		//white top
 		locations.put(26, new int[] { 705, 51 });
+		//black bottom
 		locations.put(27, new int[] { 705, 509 });
 	}
-	@Override
-	public void mouseClicked(MouseEvent e) {}
 
 	@Override
-	public void mouseEntered(MouseEvent e) {}
+	public void mouseClicked(MouseEvent e) {
+	}
 
 	@Override
-	public void mouseExited(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {
+	}
 
 	@Override
-	public void mouseMoved(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+	}
 }
+//You incompetent imbecilic waste of natural selection, your brain would be put to better use in a baboon rather than squandered like it is in yours. 
+//You're a defective, selfish, moronic mongrel. You don't deserve to take another breath of air. You're a despicable imbecile with no self respect. I don't even know how you can live with yourself- how do you not see your ignorance and lack of ability to function like a decent human being. You're a sack of excrement and it's obvious your company is no longer needed around anyone anymore. You're worthless, and your life leads nowhere. Suicide is probably your only viable option, that's how terrible and toxic of a person you are. I can't imagine the mental disorders you've stacked up over the years. Please do me a solid favor and choke to death on something painful to swallow.

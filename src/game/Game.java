@@ -1,14 +1,12 @@
 package game;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
-import javax.swing.JFrame;
 
 import AI.AI;
 
-public class Game extends JFrame {
+public class Game {
 	
 	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	int userInput;
@@ -27,7 +25,8 @@ public class Game extends JFrame {
 			dice.trowDices();
 			board.setDices(dice.getDices());
 			board.setPlayers(true);
-			movesLeft = board.getPossibleMoves();
+			board.searchForValideMoves();
+			movesLeft = board.isValidMovesLeft();
 			
 			
 			

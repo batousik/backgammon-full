@@ -10,8 +10,15 @@ public class Move {
 		moveType = mt;
 		startField = start;
 		this.moveAmount = moveAmount;
-
 		endField = start + moveAmount;
+	}
+	
+	// for bear off move
+	public Move(MoveType mt, int start, int moveAmount, int endPos) {
+		moveType = mt;
+		startField = start;
+		this.moveAmount = moveAmount;
+		endField = endPos;
 	}
 
 	@Override

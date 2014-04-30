@@ -80,11 +80,11 @@ public class Board {
 				break;
 			}
 		}
+		//TODO REMOVE
 		// for (int i = 0; i < 28; i++) {
 		// System.out.println(colorArray[i] + " " + amountArray[i]);
 		// }
 	}
-	
 
 	public boolean isMovesLeft() {
 		if (dices == null)
@@ -105,17 +105,25 @@ public class Board {
 		}
 	}
 
-	public boolean getPossibleMoves() {
-		
-		evalDices();
-		findValidMoves();
+	/**
+	 * 
+	 * @return checks if valid moves array list has moves left
+	 * 
+	 */
+	public boolean isValidMovesLeft() {
 		// if no possible moves turn changes
 		if (validMoves.size() == 0)
 			return false;
 		return true;
 	}
 
+	public void searchForValideMoves() {
+		evalDices();
+		findValidMoves();
+	}
+
 	private void findValidMoves() {
+
 		boolean barFlag = true;
 
 		// playable area, going through all fields
@@ -125,13 +133,19 @@ public class Board {
 				for (Integer amount : possibleMoves) {
 					// but bear off move is weird
 
-					if (allAtHome(currPlayer)) {
+					if (isAllAtHome(currPlayer)) {
 						// bear of move
 						// goes of the grid
-						if ((i + amount) >= BLACKBAR
-								|| (i + amount) <= WHITEBAR) {
-							validMoves
-									.add(new Move(MoveType.BEAROFF, i, amount));
+						if(currPlayer == Color.WHITE){
+							if ((i + amount) >= BLACKBAR) {
+								validMoves
+								.add(new Move(MoveType.BEAROFF, i, amount, WHITEBEAROF));
+							}
+						} else {
+							if ((i + amount) <= WHITEBAR){
+								validMoves
+								.add(new Move(MoveType.BEAROFF, i, amount, BLACKBEAROF));
+							}
 						}
 					}
 
@@ -155,6 +169,8 @@ public class Board {
 				}
 			}
 			// only moves from bar are allowed if it is not empty
+			// for both players it need s to be checked so location 0 and 24
+			// are checked
 			if (barNotEmpty(currPlayer) && barFlag) {
 				// counter will get increased by 1
 				i = BLACKBAR - 1;
@@ -163,10 +179,14 @@ public class Board {
 
 		}
 
+		// TODO refine valid moves
+
+		// TODO remove these
 		System.out.println();
 		for (int i = 0; i < validMoves.size(); i++) {
 			System.out.println("[" + i + "] " + validMoves.get(i).toString());
 		}
+		System.out.println(currPlayer.toString());
 		System.out.println();
 
 	}
@@ -185,22 +205,34 @@ public class Board {
 			return true;
 		return false;
 	}
-
-	private boolean allAtHome(Color homePlayer) {
+	/**
+	 * Method checks if all pieces for given player are in home quadrant 
+	 * @param homePlayer current player
+	 * @return true if all at home, false otherwise
+	 */
+	private boolean isAllAtHome(Color homePlayer) {
 		// checks that no pieces of player color are outside home area
 		// home for white 19-24 inclusive
+		for ( int i = 0;i < colorArray.length; i++) {
+			System.out.print(colorArray[i]+ " ");
+		}
+		System.out.println();
+		for ( int i = 0;i < colorArray.length; i++) {
+			System.out.print(amountArray[i]+ " ");
+		}
+		System.out.println();
 		switch (homePlayer) {
 		case WHITE:
-			for (int i = WHITEBAR; i < 19; i++) {
-				if (colorArray[i] == Color.WHITE) {
+			for (int i = WHITEBAR; i <= 18; i++) {
+				if (colorArray[i] == Color.WHITE && amountArray[i] > 0) {
 					return false;
 				}
 			}
 			break;
 		// home for black 1-6 inclusive
 		case BLACK:
-			for (int i = BLACKBAR; i > 6; i--) {
-				if (colorArray[i] == Color.WHITE) {
+			for (int i = BLACKBAR; i >= 7; i--) {
+				if (colorArray[i] == Color.BLACK && amountArray[i] > 0) {
 					return false;
 				}
 			}
@@ -211,6 +243,11 @@ public class Board {
 		return true;
 	}
 
+	/**
+	 * sets dices in case of a double, creates 4 dices
+	 * 
+	 * @param dices
+	 */
 	public void setDices(int[] dices) {
 		if (dices[0] == dices[1]) {
 			this.dices = new int[] { dices[0], dices[0], dices[0], dices[0] };
@@ -225,12 +262,19 @@ public class Board {
 		if (dices == null) {
 			return;
 		}
-		if (dices.length == 2) {
+		if (dices.length >= 3) {
+			for (int i = 1; i <= dices.length; i++) {
+				possibleMoves.add(dices[0] * i);
+			}
+		} else if (dices.length == 2) {
 			if (dices[0] == dices[1]) {
 				possibleMoves.add(dices[0]);
+				possibleMoves.add(dices[0] + dices[0]);
 			} else {
 				possibleMoves.add(dices[0]);
 				possibleMoves.add(dices[1]);
+				// TODO indicates next line update
+				possibleMoves.add(dices[0] + dices[1]);
 			}
 		} else {
 			possibleMoves.add(dices[0]);
@@ -283,7 +327,7 @@ public class Board {
 			// check if field is left empty
 			if (amountArray[start] == 0)
 				colorArray[start] = Color.NONE;
-			// TODO
+
 		default:
 			break;
 		}
@@ -294,13 +338,29 @@ public class Board {
 	private void useMove(int moveAmount) {
 		switch (dices.length) {
 		case 4:
-			dices = new int[] { dices[0], dices[0], dices[0] };
+			if (moveAmount == dices[0]) {
+				dices = new int[] { dices[0], dices[0], dices[0] };
+			} else if (moveAmount == dices[0] * 2) {
+				dices = new int[] { dices[0], dices[0] };
+			} else if (moveAmount == dices[0] * 3) {
+				dices = new int[] { dices[0] };
+			} else {
+				dices = null;
+			}
 			break;
 		case 3:
-			dices = new int[] { dices[0], dices[0] };
+			if (moveAmount == dices[0]) {
+				dices = new int[] { dices[0], dices[0] };
+			} else if (moveAmount == dices[0] * 2) {
+				dices = new int[] { dices[0] };
+			} else {
+				dices = null;
+			}
 			break;
 		case 2:
-			if (moveAmount == dices[0]) {
+			if (moveAmount == dices[0] + dices[1]) {
+				dices = null;
+			} else if (moveAmount == dices[0]) {
 				dices = new int[] { dices[1] };
 			} else {
 				dices = new int[] { dices[0] };
@@ -318,15 +378,23 @@ public class Board {
 			break;
 		}
 	}
-	
+
+	/**
+	 * implements rule, where if with some moves you can use more moves, you
+	 * have to use them, and other moves become invalid
+	 */
+	private void refineValidMoves() {
+
+	}
+
 	public ArrayList<Move> getValidMoves() {
 		return this.validMoves;
 	}
-	
+
 	public void setCurrentPlayer(Color color) {
 		this.currPlayer = color;
 	}
-	
+
 	public Color getCurrentPlayer() {
 		return this.currPlayer;
 	}
