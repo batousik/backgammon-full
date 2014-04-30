@@ -84,6 +84,7 @@ public class Board {
 		// System.out.println(colorArray[i] + " " + amountArray[i]);
 		// }
 	}
+	
 
 	public boolean isMovesLeft() {
 		if (dices == null)
@@ -107,14 +108,14 @@ public class Board {
 	public boolean getPossibleMoves() {
 		
 		evalDices();
-		getValidMoves();
+		findValidMoves();
 		// if no possible moves turn changes
 		if (validMoves.size() == 0)
 			return false;
 		return true;
 	}
 
-	private void getValidMoves() {
+	private void findValidMoves() {
 		boolean barFlag = true;
 
 		// playable area, going through all fields
@@ -221,8 +222,9 @@ public class Board {
 	public void evalDices() {
 		possibleMoves = new ArrayList<Integer>();
 		// if no more dices left, possible moves = null, no valid moves
-		if (dices == null)
+		if (dices == null) {
 			return;
+		}
 		if (dices.length == 2) {
 			if (dices[0] == dices[1]) {
 				possibleMoves.add(dices[0]);
@@ -316,5 +318,16 @@ public class Board {
 			break;
 		}
 	}
-
+	
+	public ArrayList<Move> getValidMoves() {
+		return this.validMoves;
+	}
+	
+	public void setCurrentPlayer(Color color) {
+		this.currPlayer = color;
+	}
+	
+	public Color getCurrentPlayer() {
+		return this.currPlayer;
+	}
 }

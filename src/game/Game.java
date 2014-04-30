@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 
 import javax.swing.JFrame;
 
+import AI.AI;
+
 public class Game extends JFrame {
 	
 	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -32,10 +34,9 @@ public class Game extends JFrame {
 			board.setPlayers(isWhite);
 			movesLeft = board.getPossibleMoves();
 			
+			if(isWhite) {
 			while(movesLeft) {
 				draw();
-				
-				
 				
 				System.out.print(isWhite + " Enter choice");
 			
@@ -50,7 +51,10 @@ public class Game extends JFrame {
 				board.move(userInput);
 				movesLeft = board.getPossibleMoves();
 			}
-			
+			}
+			else {
+				new AI(board);
+			}
 			changePlayer();
 			
 			
