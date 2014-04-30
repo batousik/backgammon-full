@@ -266,9 +266,8 @@ public class MainWindow extends JFrame implements ActionListener,
 	 * @return true for valid and false for an invalid move
 	 */
 	private boolean stonePlacedValidly(int currLeftX, int currLeftY) {
-		// TODO Auto-generated method stub
+		// getting valid moves for current game state
 		ArrayList<Move> moves = board.getValidMoves();
-		//moves.add(new Move(MoveType.NORMAL, 1, 1));
 		Zone startLoc;
 		Zone endLoc;
 		for (int i = 0; i < moves.size(); i++) {
@@ -314,33 +313,6 @@ public class MainWindow extends JFrame implements ActionListener,
 
 	}
 
-
-
-
-//	private void play() {
-//		Dice dice;
-//		Board board;
-//		boolean movesLeft;
-//
-//		dice = new Dice();
-//		board = new Board();
-//		isWhite = true;
-//
-//		// while not won
-//		//while (true) {
-//			dice.trowDices();
-//			board.setDices(dice.getDices());
-//			board.setPlayers(isWhite);
-//			movesLeft = board.getPossibleMoves();
-//
-//			while (movesLeft) {
-//				// make a move
-//				// placeStones(board.getAmountArray(), board.getColorArray());
-//			}
-//
-//		//}
-//	}
-
 	/**
 	 * Method places all stones round the board with given amount and colour
 	 * @param amountArray array that holds how many pieces at each field
@@ -370,6 +342,7 @@ public class MainWindow extends JFrame implements ActionListener,
 			stackProportion = 40;
 		}
 		for (int i = 0; i < amount; i++) {
+			//TODO create image icons at start
 			stones[currStone].setIcon(new ImageIcon(picture));
 			
 			if (fieldID < 13) {
@@ -384,6 +357,7 @@ public class MainWindow extends JFrame implements ActionListener,
 	}
 
 
+	// simply changes current player
 	private void changePlayer() {
 		if (isWhite) {
 			isWhite = false;
@@ -392,13 +366,14 @@ public class MainWindow extends JFrame implements ActionListener,
 		}
 	}
 
+	// sets images for stones
 	private void initStoneColors() {
 		stoneImage = new HashMap<game.Color, String>();
 		stoneImage.put(game.Color.BLACK, "SilverNSH.gif");
 		stoneImage.put(game.Color.WHITE, "GoldNSH.gif");
 	}
 
-	// Creating zones for fields on a board
+	// Creating zones for fields on a board for dropping stones
 	private void initFieldZones() {
 		zones = new HashMap<Integer, Zone>();
 		zones.put(0, new Zone(350, 399, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
@@ -445,7 +420,7 @@ public class MainWindow extends JFrame implements ActionListener,
 				new Zone(700, 749, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
 		zones.put(27, new Zone(700, 749, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
 	}
-
+	// Creating location for each field to place stones nicely
 	private void initLocs() {
 		locations = new HashMap<Integer, int[]>();
 		locations.put(0, new int[] { 355, 509 });
