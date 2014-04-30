@@ -3,7 +3,6 @@ package gui;
 import game.Board;
 import game.Dice;
 import game.Move;
-import game.MoveType;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -35,13 +34,20 @@ public class MainWindow extends JFrame implements ActionListener,
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	private final int LEFT_BOUNDARY = 50;
-	private final int RIGHT_BOUNDARY = 660;
-	private final int TOP_BOUNDARY = 50;
-	private final int BOTTOM_BOUNDARY = 510;
-	private final int HORIZONTAL_HALFWAY = 250;
-	private final int NUMBER_OF_STONES = 30;
-	private final int STONE_SIZE = 40;
+
+	
+	
+	// gui positioning constants
+	private static final int LEFT_BOUNDARY = 50;
+	private static final int RIGHT_BOUNDARY = 660;
+	private static final int TOP_BOUNDARY = 50;
+	private static final int BOTTOM_BOUNDARY = 510;
+	private static final int HORIZONTAL_HALFWAY = 250;
+	private static final int NUMBER_OF_STONES = 30;
+	private static final int STONE_SIZE = 40;
+	private static final int MAX_NO_PER_FIELD_NO_STACK = 6;
+	
+	// gui objects
 	private JPanel mainContentPane;
 	private JLayeredPane gamePanel;
 	private JLabel background;
@@ -50,6 +56,8 @@ public class MainWindow extends JFrame implements ActionListener,
 	private JMenuItem newGame, exit, help;
 	private JLabel[] stones;
 	private Dimension preferredSize;
+	
+	// vars needed for stones 
 	private int stoneDragged = NUMBER_OF_STONES;
 	private int clickX = 0;
 	private int clickY = 0;
@@ -58,9 +66,17 @@ public class MainWindow extends JFrame implements ActionListener,
 	private HashMap<game.Color, String> stoneImage;
 	private HashMap<Integer, Zone> zones;
 	private HashMap<Integer, int[]> locations;
-
+	private int stackProportion;
+	
+	private Dice dice;
+	private Board board;
+	private boolean movesLeft;
+	private boolean isWhite;
+	
 	private int currStone;
 	private int chosenMove;
+
+	
 
 	public MainWindow() {
 		// creates main interface of a program
@@ -71,10 +87,11 @@ public class MainWindow extends JFrame implements ActionListener,
 		initLocs();
 		// create zones for each field for dropping stones
 		initFieldZones();
-
+		// Initializing the actual game, game logic
+		initBackgammon();
+		
 		// no stone selected
 		currStone = NUMBER_OF_STONES;
-		play();
 	}
 
 	private void createGUI() {
@@ -154,7 +171,49 @@ public class MainWindow extends JFrame implements ActionListener,
 			stones[i].addMouseMotionListener(this);
 		}
 	}
-
+	
+	private void initBackgammon() {
+		// creating new dice object
+		dice = new Dice();
+		// creating new backgammon board, that implements backgammon rules
+		board = new Board();
+		// White start
+		isWhite = true;
+		// throw and set dices for first move
+		dice.trowDices();
+		board.setDices(dice.getDices());
+		// set current player
+		board.setPlayers(isWhite);
+		// drawing stones to start locations
+		placeStones(board.getAmountArray(), board.getColorArray());
+		// evaluating first set of valid moves
+		movesLeft = board.getPossibleMoves();
+	}
+	
+	private void moveMade() {
+		board.move(chosenMove);
+		// redrawing board to keep stones nicely in the line
+		placeStones(board.getAmountArray(), board.getColorArray());
+		//TODO split mowesLeft to two voids
+		// moves left recalculates valid moves and says if any left
+		movesLeft = board.getPossibleMoves();
+		
+		// if no possible moves left change the player
+		if (!movesLeft) {
+			changeTurn();
+		}
+	}
+	
+	private void changeTurn() {
+		// swaps white for black and vice versa
+		changePlayer();
+		dice.trowDices();
+		board.setDices(dice.getDices());
+		board.setPlayers(isWhite);
+		//player changed recalculate player moves
+		movesLeft = board.getPossibleMoves();
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == exit) {
@@ -185,10 +244,9 @@ public class MainWindow extends JFrame implements ActionListener,
 				stones[stoneDragged].setLocation(initialX, initialY);
 			if (stones[stoneDragged].getY() > BOTTOM_BOUNDARY)
 				stones[stoneDragged].setLocation(initialX, initialY);
-			// TODO create check for valid move
 			if (stonePlacedValidly(stones[stoneDragged].getX(),
 					stones[stoneDragged].getY())) {
-				// moveMade=true;
+				moveMade();
 			} else {
 				stones[stoneDragged].setLocation(initialX, initialY);
 			}
@@ -199,6 +257,7 @@ public class MainWindow extends JFrame implements ActionListener,
 		stoneDragged = NUMBER_OF_STONES;
 	}
 
+
 	/**
 	 * Method checks if User moved Stone from and to a valid location
 	 * 
@@ -208,8 +267,8 @@ public class MainWindow extends JFrame implements ActionListener,
 	 */
 	private boolean stonePlacedValidly(int currLeftX, int currLeftY) {
 		// TODO Auto-generated method stub
-		ArrayList<Move> moves = new ArrayList<Move>();
-		moves.add(new Move(MoveType.NORMAL, 1, 1));
+		ArrayList<Move> moves = board.getValidMoves();
+		//moves.add(new Move(MoveType.NORMAL, 1, 1));
 		Zone startLoc;
 		Zone endLoc;
 		for (int i = 0; i < moves.size(); i++) {
@@ -257,31 +316,30 @@ public class MainWindow extends JFrame implements ActionListener,
 
 
 
-	boolean isWhite;
 
-	private void play() {
-		Dice dice;
-		Board board;
-		boolean movesLeft;
-
-		dice = new Dice();
-		board = new Board();
-		isWhite = true;
-
-		// while not won
-		while (true) {
-			dice.trowDices();
-			board.setDices(dice.getDices());
-			board.setPlayers(isWhite);
-			movesLeft = board.getPossibleMoves();
-
-			while (movesLeft) {
-				placeStones(board.getAmountArray(), board.getColorArray());
-			}
-			break;
-
-		}
-	}
+//	private void play() {
+//		Dice dice;
+//		Board board;
+//		boolean movesLeft;
+//
+//		dice = new Dice();
+//		board = new Board();
+//		isWhite = true;
+//
+//		// while not won
+//		//while (true) {
+//			dice.trowDices();
+//			board.setDices(dice.getDices());
+//			board.setPlayers(isWhite);
+//			movesLeft = board.getPossibleMoves();
+//
+//			while (movesLeft) {
+//				// make a move
+//				// placeStones(board.getAmountArray(), board.getColorArray());
+//			}
+//
+//		//}
+//	}
 
 	/**
 	 * Method places all stones round the board with given amount and colour
@@ -305,24 +363,27 @@ public class MainWindow extends JFrame implements ActionListener,
 	 * @param picture
 	 */
 	private void placeStonesOnAField(int fieldID, int amount, String picture) {
+		// if more than MAX_NO_PER_FIELD_NO_STACK, then stack stones 
+		if (amount > MAX_NO_PER_FIELD_NO_STACK) {
+			stackProportion = 240/amount;
+		} else {
+			stackProportion = 40;
+		}
 		for (int i = 0; i < amount; i++) {
 			stones[currStone].setIcon(new ImageIcon(picture));
 			
 			if (fieldID < 13) {
 				stones[currStone].setLocation(locations.get(fieldID)[0],
-						locations.get(fieldID)[1] - i * 40);
+						locations.get(fieldID)[1] - i * stackProportion);
 			} else {
 				stones[currStone].setLocation(locations.get(fieldID)[0],
-						locations.get(fieldID)[1] + i * 40);
+						locations.get(fieldID)[1] + i * stackProportion);
 			}
-			stones[currStone].setSize(40, 40);
 			currStone++;
 		}
 	}
 
-	/**
-	 * 
-	 
+
 	private void changePlayer() {
 		if (isWhite) {
 			isWhite = false;
@@ -330,7 +391,7 @@ public class MainWindow extends JFrame implements ActionListener,
 			isWhite = true;
 		}
 	}
-*/
+
 	private void initStoneColors() {
 		stoneImage = new HashMap<game.Color, String>();
 		stoneImage.put(game.Color.BLACK, "SilverNSH.gif");
@@ -352,7 +413,7 @@ public class MainWindow extends JFrame implements ActionListener,
 		zones.put(9, new Zone(200, 249, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
 		zones.put(10, new Zone(150, 199, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
 		zones.put(11, new Zone(100, 149, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
-		zones.put(12, new Zone(50, 99, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
+		zones.put(12, new Zone(50, 99, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
 		// top of the board
 		zones.put(13, new Zone(50, 99, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
 		zones.put(14,
