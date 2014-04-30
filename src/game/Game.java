@@ -22,43 +22,18 @@ public class Game extends JFrame {
 		dice = new Dice();
 		board = new Board();
 		isWhite = true;
-		play();
 	}
 	
-	private void play() {
-		
-		// while not won
-		while (true) {
+	public void play(String opponentMove) {
 			dice.trowDices();
 			board.setDices(dice.getDices());
 			board.setPlayers(isWhite);
 			movesLeft = board.getPossibleMoves();
-			
-			if(isWhite) {
-			while(movesLeft) {
-				draw();
-				
-				System.out.print(isWhite + " Enter choice");
-			
-			    try{
-			         userInput = Integer.parseInt(br.readLine());
-			    }catch(NumberFormatException nfe){
-			        System.err.println("Invalid Format!");
-			    } catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				board.move(userInput);
-				movesLeft = board.getPossibleMoves();
-			}
-			}
-			else {
-				new AI(board);
-			}
+			new AI(board);
 			changePlayer();
-			
-			
-		}
+	}
+	
+	public String getMoveMade() {
 	}
 
 	private void draw() {

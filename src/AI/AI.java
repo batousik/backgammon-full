@@ -2,6 +2,7 @@ package AI;
 
 import java.util.ArrayList;
 
+import server.Server;
 import game.*;
 
 public class AI {
@@ -14,6 +15,7 @@ public class AI {
 	private ArrayList<Move> possibleMoves;
 	private ScoredMove[] scoredMoves;
 	private int bestMoveIndex;
+	private String moveMade;
 	
 	public AI (Board board) {
 		this.possibleMoves = board.getValidMoves();

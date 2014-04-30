@@ -1,5 +1,6 @@
 package main;
 
+import server.Server;
 import game.Game;
 import gui.MainWindow;
 
@@ -7,9 +8,8 @@ import gui.MainWindow;
 
 public class Main {
 
-	
 	public static void main(String[] args){
-	
-	MainWindow mw = new MainWindow();
+		Game game = new Game();
+		Server.connect(args[0], Boolean.parseBoolean(args[1]), game);
 	}
 }
