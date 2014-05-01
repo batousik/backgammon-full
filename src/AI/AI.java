@@ -41,5 +41,6 @@ public class AI {
 		board.getDices();
 		moveMade.getEndField();
 		moveMade.getStartField();
+		return "(" + moveMade.getStartField() + "|" + moveMade.getEndField() + ")";
 	}
 }

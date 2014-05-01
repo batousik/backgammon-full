@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import server.OpponentMove;
 import AI.AI;
 
-import simpleAI.AI;
 
 
 public class Game {
@@ -28,11 +27,6 @@ public class Game {
 
 	public void play(OpponentMove[] opponentMove) {
 			board.setDices(opponentMove[0].getDiceRoll());
-
-	public void play(Move opponentMove) {
-			dice.throwDices();
-			board.setDices(dice.getDices());
-
 			board.setPlayers(true);
 			board.searchForValideMoves();
 			movesLeft = board.isValidMovesLeft();
@@ -51,7 +45,10 @@ public class Game {
 			changePlayer();
 			dice.throwDices();
 			board.setDices(dice.getDices());
-			new AI(board);
+			for (/*number of moves*/) {
+				//need some way to store moves made by AI
+				new AI(board);
+			}
 	}
 	
 

@@ -8,29 +8,11 @@ import java.net.*;
 import main.Main;
 
 public class Server {
-	private int PORT_NUMBER = 5001;
-	private String serverName = "127.0.0.1";
+	private static int PORT_NUMBER = 5001;
+	private static String serverName = "127.0.0.1";
 	
-	/**
-	 * Server Mode
-	 * @param port_num
-	 */
-	public Server(String port_num) {
-		PORT_NUMBER = Integer.parseInt(port_num);
-	}
-	
-	/**
-	 * Client Mode
-	 * @param port_num
-	 * @param server
-	 */
-	public Server(String port_num, String server) {
-		PORT_NUMBER = Integer.parseInt(port_num);
-		serverName = server;
-	}
-	
-	// TODO after constructor straight away connect
-	public void connect(String serverName, boolean serverMode, Game game) {
+	// TODO This method should be static, we only ever have one connection. Don't refactor live code.
+	public static void connect(String serverName, boolean serverMode, Game game) {
 		if (!serverMode) {
 			try {
 				Socket clientSocket = new Socket(serverName, PORT_NUMBER);
@@ -45,6 +27,7 @@ public class Server {
 						output.print("newgame");
 					}
 					else {
+						game.play(null);
 						output.print(AI.lastMoveMade);
 					}
 				}
