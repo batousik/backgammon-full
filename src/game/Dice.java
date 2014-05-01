@@ -11,7 +11,7 @@ public class Dice {
 		rn = new Random();
 	}
 
-	public void trowDices() {
+	public void throwDices() {
 		diceX = 1 + rn.nextInt(5);
 		diceY = 1 + rn.nextInt(5);
 	}
@@ -19,5 +19,4 @@ public class Dice {
 	public int[] getDices() {
 		return new int[]{diceX,diceY};
 	}
-
 }

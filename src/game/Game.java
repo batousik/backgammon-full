@@ -3,8 +3,7 @@ package game;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-
-import AI.AI;
+import simpleAI.AI;
 
 public class Game {
 	
@@ -22,7 +21,7 @@ public class Game {
 	}
 	
 	public void play(Move opponentMove) {
-			dice.trowDices();
+			dice.throwDices();
 			board.setDices(dice.getDices());
 			board.setPlayers(true);
 			board.searchForValideMoves();
@@ -35,9 +34,11 @@ public class Game {
 	}
 	
 	public String getMoveMade() {
-		
+		// TODO jacks code
+		return "";
 	}
-
+	
+	// TODO remove text based interface
 	private void draw() {
 		System.out.println();
 		for (int i = 13; i<25;i++) {
