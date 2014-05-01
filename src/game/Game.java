@@ -3,8 +3,12 @@ package game;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+
 import server.OpponentMove;
 import AI.AI;
+
+import simpleAI.AI;
+
 
 public class Game {
 	
@@ -21,8 +25,14 @@ public class Game {
 		board = new Board();
 	}
 	
+
 	public void play(OpponentMove[] opponentMove) {
 			board.setDices(opponentMove[0].getDiceRoll());
+
+	public void play(Move opponentMove) {
+			dice.throwDices();
+			board.setDices(dice.getDices());
+
 			board.setPlayers(true);
 			board.searchForValideMoves();
 			movesLeft = board.isValidMovesLeft();
@@ -39,11 +49,15 @@ public class Game {
 			
 			
 			changePlayer();
-			dice.trowDices();
+			dice.throwDices();
 			board.setDices(dice.getDices());
 			new AI(board);
 	}
 	
+
+	
+	// TODO remove text based interface
+
 	private void draw() {
 		System.out.println();
 		for (int i = 13; i<25;i++) {

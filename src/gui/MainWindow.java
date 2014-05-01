@@ -2,12 +2,15 @@ package gui;
 
 import game.Board;
 import game.Dice;
+import game.GameState;
 import game.Move;
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -21,14 +24,18 @@ import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+
+import simpleAI.AI;
 
 /**
  * @author 130017964
  * @version 4.20(release)
  */
 public class MainWindow extends JFrame implements ActionListener,
-		MouseListener, MouseMotionListener {
+		MouseListener, MouseMotionListener{
 	/**
 	 * 
 	 */
@@ -50,15 +57,27 @@ public class MainWindow extends JFrame implements ActionListener,
 	private JLabel background;
 	private JMenuBar menuBar;
 	private JMenu menuGameTitle, aboutGameTitle;
-	private JMenuItem newGame, exit, help;
+	private JMenuItem newGame, exit, help, test; // TODO remove test
 	private JLabel[] stones;
 	private JLabel[] highLights;
 	private Dimension preferredSize;
 	private final ImageIcon blackStoneImg = new ImageIcon("SilverNSH.gif");
 	private final ImageIcon whiteStoneImg = new ImageIcon("GoldNSH.gif");
+	private Object[] gameTypes = { "Local vs Human", "Local vs AI",
+			"Server AI", "Server Human", "Client AI", "Client Human" };
+	private String gameType;
+	// TODO PICTURES FOR DICES etc
+
 	// TODO private final ImageIcon highlightIMG = new ImageIcon(".gif");
 	// TODO image for highLight
 	// TODO Change zones a little bit
+
+	// Client-Servfer Interactions vars
+	private String serverIP;
+	private String serverPort;
+	
+	//AI
+	simpleAI.AI simpleAi;
 
 	// vars needed for stones
 	private int stoneDragged = NUMBER_OF_STONES;
@@ -79,8 +98,6 @@ public class MainWindow extends JFrame implements ActionListener,
 	private int currStone;
 	private int chosenMove;
 
-	
-
 	public MainWindow() {
 		// creates main interface of a program
 		createGUI();
@@ -92,8 +109,6 @@ public class MainWindow extends JFrame implements ActionListener,
 		initFieldZones();
 		// creating highlight objects to show where it is valid to put a piece
 		initHighLights();
-		// Initializing the actual game, game logic
-		initBackgammon();
 
 		// no stone selected
 		currStone = NUMBER_OF_STONES;
@@ -147,16 +162,28 @@ public class MainWindow extends JFrame implements ActionListener,
 
 		newGame = new JMenuItem("New Game");
 		newGame.addActionListener(this);
+		newGame.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N,
+				ActionEvent.CTRL_MASK));
 		menuGameTitle.add(newGame);
 
 		exit = new JMenuItem("Exit");
 		exit.addActionListener(this);
+		exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F4,
+				ActionEvent.ALT_MASK));
 		menuGameTitle.add(exit);
-
+		
+		test = new JMenuItem("test");
+		test.addActionListener(this);
+		test.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+				ActionEvent.ALT_MASK));
+		menuGameTitle.add(test);
+		
 		aboutGameTitle = new JMenu("About");
 
 		help = new JMenuItem("Help");
 		help.addActionListener(this);
+		help.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H,
+				ActionEvent.CTRL_MASK));
 		aboutGameTitle.add(help);
 
 		// adding to menu bar
@@ -182,20 +209,37 @@ public class MainWindow extends JFrame implements ActionListener,
 		dice = new Dice();
 		// creating new backgammon board, that implements backgammon rules
 		board = new Board();
-		// White start
-		isWhite = true;
+		// get who Starts
+		isWhite = board.getWhoStarts();
+		// print whos move
+	}
+
+	private void makeTurn() {
 		// throw and set dices for first move
-		dice.trowDices();
-		//TODO change to dices
-		//board.setDices(dice.getDices());
-		board.setDices(new int[] {6,6});
+		dice.throwDices();
+		board.setDices(dice.getDices());
+		// TODO print DICES
 		// set current player
 		board.setPlayers(isWhite);
 		// drawing stones to start locations
 		placeStones(board.getAmountArray(), board.getColorArray());
 		// evaluating first set of valid moves
 		board.searchForValideMoves();
-		isMovesLeft = board.isValidMovesLeft();
+		// isMovesLeft = board.isValidMovesLeft();
+	}
+	
+	/**
+	 * Assumes white/golden/bottom is human, top/silver/black is ai
+	 */
+	private void playLocalVsAI() {
+		if(isWhite){
+			makeTurn();
+		} else {
+			makeTurn();
+			simpleAi = new AI(board);
+			chosenMove = simpleAi.getChosenMove();
+			moveMade();
+		}
 	}
 
 	private void initHighLights() {
@@ -215,8 +259,25 @@ public class MainWindow extends JFrame implements ActionListener,
 		}
 	}
 
+	/**
+	 * Move made 
+	 * win check
+	 * board state is changed
+	 * redraw
+	 * board, update moves
+	 * in case no moves left change player
+	 */
 	private void moveMade() {
+		// move the piece
 		board.move(chosenMove);
+		// check if game won
+		if (board.checkWin() != GameState.STILL_PLAYING) {
+			if (board.checkWin() == GameState.WHITE_WON) {
+				// TODO white win
+			} else {
+				// TODO Black WIn
+			}
+		}
 		// redrawing board to keep stones nicely in the line
 		placeStones(board.getAmountArray(), board.getColorArray());
 		// moves left recalculates valid moves and says if any left
@@ -225,28 +286,108 @@ public class MainWindow extends JFrame implements ActionListener,
 
 		// if no possible moves left change the player
 		if (!isMovesLeft) {
-			changeTurn();
+			changePlayer();
+			makeTurn();
 		}
 	}
-
-	private void changeTurn() {
-		// swaps white for black and vice versa
-		changePlayer();
-		dice.trowDices();
-		//TODO change to dices
-		//board.setDices(dice.getDices());
-		board.setDices(new int[] {6,6});
-		board.setPlayers(isWhite);
-		// player changed recalculate player moves
-		board.searchForValideMoves();
-		isMovesLeft = board.isValidMovesLeft();
+	
+	private void aiTurn() {
+		simpleAi = new AI(board);
+		chosenMove = simpleAi.getChosenMove();
+		moveMade();
 	}
+	
 
+
+	/**
+	 * Action listeners for menus
+	 */
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == exit) {
 			System.exit(0);
 		}
+		// TODO About Window/Help
+		if (e.getSource() == help) {
+			JOptionPane.showMessageDialog(this, "Made by Bato-Bair Tsyrenov\n"
+					+ "Version 4.20\n" + "++Networking enabled++\n"
+					+ "++3 Ai-Levels++", "INFO",
+					JOptionPane.INFORMATION_MESSAGE, new ImageIcon("a.png"));
+		}
+
+		/**
+		 * Actual place to start a new game
+		 * 
+		 * 
+		 */
+
+		if (e.getSource() == newGame) {
+			// Initializing the actual game, game logic
+			initBackgammon();
+			gameType = null;
+			gameType = (String) JOptionPane.showInputDialog(this,
+					"Please choose game type", "New Game",
+					JOptionPane.PLAIN_MESSAGE, new ImageIcon("a.png"),
+					gameTypes, "null");
+
+			if ((gameType != null) && (gameType.length() > 0)) {
+				// TODO run selected game type
+				// TODO different AI dificulties
+				switch (gameType) {
+				case "Local vs Human":
+					makeTurn();
+					break;
+				case "Local vs AI":
+					// TODO
+					break;
+				case "Server AI":
+					// TODO
+					serverPort = (String) JOptionPane.showInputDialog(this,
+							"Please specify PORT for the server",
+							"Server PORT", JOptionPane.PLAIN_MESSAGE,
+							new ImageIcon("a.png"), null, "");
+					break;
+				case "Server Human":
+					// TODO
+					serverPort = (String) JOptionPane.showInputDialog(this,
+							"Please specify PORT for the server",
+							"Server PORT", JOptionPane.PLAIN_MESSAGE,
+							new ImageIcon("a.png"), null, "");
+					break;
+				case "Client AI":
+					// TODO
+					serverIP = (String) JOptionPane.showInputDialog(this,
+							"Please enter IP for the server", "Server IP",
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon("a.png"),
+							null, "");
+					serverPort = (String) JOptionPane.showInputDialog(this,
+							"Please enter PORT for the server", "Server PORT",
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon("a.png"),
+							null, "");
+					// TODO get who starts
+					break;
+				case "Client Human":
+					// TODO
+					serverIP = (String) JOptionPane.showInputDialog(this,
+							"Please enter IP for the server", "Server IP",
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon("a.png"),
+							null, "");
+					serverPort = (String) JOptionPane.showInputDialog(this,
+							"Please enter PORT for the server", "Server PORT",
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon("a.png"),
+							null, "");
+					// TODO get who starts
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		
+		if (e.getSource() == test){
+			aiTurn();
+		}
+
 	}
 
 	@Override
@@ -261,7 +402,10 @@ public class MainWindow extends JFrame implements ActionListener,
 	}
 
 	/**
-	 * Method makes sure when stone is dropped it is dropped
+	 * Method makes sure when stone is dropped it is dropped on valid location
+	 * and doesn't allow the piece to be placed off the screen
+	 * 
+	 * Also it makes higlight fields invisible
 	 */
 	@Override
 	public void mouseReleased(MouseEvent e) {
@@ -285,9 +429,9 @@ public class MainWindow extends JFrame implements ActionListener,
 
 		// no stone is dragged
 		stoneDragged = NUMBER_OF_STONES;
-		
-		//dehighlight highlited valid drop places
-		for (int i = 0; i<highLights.length; i++){
+
+		// dehighlight highlited valid drop places
+		for (int i = 0; i < highLights.length; i++) {
 			highLights[i].setVisible(false);
 		}
 	}
@@ -323,8 +467,7 @@ public class MainWindow extends JFrame implements ActionListener,
 	}
 
 	/**
-	 * Method Drags selected piece and doesn't allow the piece to be dragged of
-	 * the screen
+	 * Method Drags selected piece
 	 * 
 	 */
 	@Override
@@ -334,19 +477,11 @@ public class MainWindow extends JFrame implements ActionListener,
 		int xLoc;
 
 		// if a stone is being dragged move it around
-		
+
 		if (stoneDragged >= 0 && stoneDragged < NUMBER_OF_STONES) {
 			xLoc = e.getComponent().getX() + e.getX() - clickX;
 			yLoc = e.getComponent().getY() + e.getY() - clickY;
 			stones[stoneDragged].setLocation(xLoc, yLoc);
-//			if (stones[stoneDragged].getX() < LEFT_BOUNDARY)
-//				stones[stoneDragged].setLocation(initialX, initialY);
-//			if (stones[stoneDragged].getY() < TOP_BOUNDARY)
-//				stones[stoneDragged].setLocation(initialX, initialY);
-//			if (stones[stoneDragged].getX() > RIGHT_BOUNDARY)
-//				stones[stoneDragged].setLocation(initialX, initialY);
-//			if (stones[stoneDragged].getY() > BOTTOM_BOUNDARY)
-//				stones[stoneDragged].setLocation(initialX, initialY);
 		}
 
 	}
@@ -354,6 +489,7 @@ public class MainWindow extends JFrame implements ActionListener,
 	private void highLightValidMoveToLocs() {
 		ArrayList<Move> moves = board.getValidMoves();
 		Zone startLoc;
+		// TODO highlight picture
 		for (int i = 0; i < moves.size(); i++) {
 			// finds where piece was taken from
 			startLoc = zones.get(moves.get(i).getStartField());
@@ -361,7 +497,8 @@ public class MainWindow extends JFrame implements ActionListener,
 			if (startLoc.isInZone(initialX, initialY)) {
 				// highlight valid drop places for curr move
 				highLights[moves.get(i).getEndField()].setVisible(true);
-				background.setComponentZOrder(highLights[moves.get(i).getEndField()], 0);
+				background.setComponentZOrder(highLights[moves.get(i)
+						.getEndField()], 0);
 			}
 		}
 	}
@@ -475,7 +612,7 @@ public class MainWindow extends JFrame implements ActionListener,
 		// white top
 		zones.put(26,
 				new Zone(700, 749, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
-		//black bottom
+		// black bottom
 		zones.put(27, new Zone(700, 749, HORIZONTAL_HALFWAY, BOTTOM_BOUNDARY));
 	}
 
@@ -508,9 +645,9 @@ public class MainWindow extends JFrame implements ActionListener,
 		locations.put(23, new int[] { 605, 51 });
 		locations.put(24, new int[] { 655, 51 });
 		locations.put(25, new int[] { 355, 51 });
-		//white top
+		// white top
 		locations.put(26, new int[] { 705, 51 });
-		//black bottom
+		// black bottom
 		locations.put(27, new int[] { 705, 509 });
 	}
 
@@ -528,7 +665,6 @@ public class MainWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-	}
-}
-//You incompetent imbecilic waste of natural selection, your brain would be put to better use in a baboon rather than squandered like it is in yours. 
-//You're a defective, selfish, moronic mongrel. You don't deserve to take another breath of air. You're a despicable imbecile with no self respect. I don't even know how you can live with yourself- how do you not see your ignorance and lack of ability to function like a decent human being. You're a sack of excrement and it's obvious your company is no longer needed around anyone anymore. You're worthless, and your life leads nowhere. Suicide is probably your only viable option, that's how terrible and toxic of a person you are. I can't imagine the mental disorders you've stacked up over the years. Please do me a solid favor and choke to death on something painful to swallow.
+	}}
+	
+

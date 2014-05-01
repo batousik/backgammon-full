@@ -1,6 +1,7 @@
 package game;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Board {
 	public static final int WHITEBAR = 0, BLACKBAR = 25, WHITEBEAROF = 26,
@@ -20,6 +21,8 @@ public class Board {
 	public int[] getDices() {
 		return this.dices;
 	}
+
+	
 
 	public Board() {
 		// creating fields on the board
@@ -84,10 +87,6 @@ public class Board {
 				break;
 			}
 		}
-		//TODO REMOVE
-		// for (int i = 0; i < 28; i++) {
-		// System.out.println(colorArray[i] + " " + amountArray[i]);
-		// }
 	}
 
 	public boolean isMovesLeft() {
@@ -184,7 +183,7 @@ public class Board {
 		}
 
 		// TODO refine valid moves
-
+		refineValidMoves();
 		// TODO remove these
 		System.out.println();
 		for (int i = 0; i < validMoves.size(); i++) {
@@ -217,14 +216,7 @@ public class Board {
 	private boolean isAllAtHome(Color homePlayer) {
 		// checks that no pieces of player color are outside home area
 		// home for white 19-24 inclusive
-		for ( int i = 0;i < colorArray.length; i++) {
-			System.out.print(colorArray[i]+ " ");
-		}
-		System.out.println();
-		for ( int i = 0;i < colorArray.length; i++) {
-			System.out.print(amountArray[i]+ " ");
-		}
-		System.out.println();
+		
 		switch (homePlayer) {
 		case WHITE:
 			for (int i = WHITEBAR; i <= 18; i++) {
@@ -266,19 +258,12 @@ public class Board {
 		if (dices == null) {
 			return;
 		}
-		if (dices.length >= 3) {
-			for (int i = 1; i <= dices.length; i++) {
-				possibleMoves.add(dices[0] * i);
-			}
-		} else if (dices.length == 2) {
+		if (dices.length == 2) {
 			if (dices[0] == dices[1]) {
 				possibleMoves.add(dices[0]);
-				possibleMoves.add(dices[0] + dices[0]);
 			} else {
 				possibleMoves.add(dices[0]);
 				possibleMoves.add(dices[1]);
-				// TODO indicates next line update
-				possibleMoves.add(dices[0] + dices[1]);
 			}
 		} else {
 			possibleMoves.add(dices[0]);
@@ -342,29 +327,13 @@ public class Board {
 	private void useMove(int moveAmount) {
 		switch (dices.length) {
 		case 4:
-			if (moveAmount == dices[0]) {
 				dices = new int[] { dices[0], dices[0], dices[0] };
-			} else if (moveAmount == dices[0] * 2) {
-				dices = new int[] { dices[0], dices[0] };
-			} else if (moveAmount == dices[0] * 3) {
-				dices = new int[] { dices[0] };
-			} else {
-				dices = null;
-			}
 			break;
 		case 3:
-			if (moveAmount == dices[0]) {
 				dices = new int[] { dices[0], dices[0] };
-			} else if (moveAmount == dices[0] * 2) {
-				dices = new int[] { dices[0] };
-			} else {
-				dices = null;
-			}
 			break;
 		case 2:
-			if (moveAmount == dices[0] + dices[1]) {
-				dices = null;
-			} else if (moveAmount == dices[0]) {
+			 if (moveAmount == dices[0]) {
 				dices = new int[] { dices[1] };
 			} else {
 				dices = new int[] { dices[0] };
@@ -388,7 +357,14 @@ public class Board {
 	 * have to use them, and other moves become invalid
 	 */
 	private void refineValidMoves() {
+		//TODO makeIT
 
+//		A player must use both numbers of a roll if this is legally possible 
+//		(or all four numbers of a double).
+//		When only one number can be played, the player must play that number.
+//		Or if either number can be played but not both, the player must play the larger one. 
+//		When neither number can be used, the player loses his turn. In the case of doubles, 
+//		when all four numbers cannot be played, the player must play as many numbers as he can. 
 	}
 
 	public ArrayList<Move> getValidMoves() {
@@ -401,5 +377,22 @@ public class Board {
 
 	public Color getCurrentPlayer() {
 		return this.currPlayer;
+	}
+	
+	public GameState checkWin(){
+		if (amountArray[26] == 15) {
+			return GameState.WHITE_WON;
+		} else if (amountArray[27] == 15){
+			return GameState.BLACK_WON;
+		}
+		return GameState.STILL_PLAYING;
+	}
+	/**
+	 * Generates random boolean
+	 * @return randomly returns true for white to start
+	 * or black for black to start
+	 */
+	public boolean getWhoStarts(){
+		return new Random().nextBoolean();
 	}
 }

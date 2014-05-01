@@ -8,9 +8,29 @@ import java.net.*;
 import main.Main;
 
 public class Server {
-	private static final int PORT_NUMBER = 5001;
+	private int PORT_NUMBER = 5001;
+	private String serverName = "127.0.0.1";
 	
-	public static void connect(String serverName, boolean serverMode, Game game) {
+	/**
+	 * Server Mode
+	 * @param port_num
+	 */
+	public Server(String port_num) {
+		PORT_NUMBER = Integer.parseInt(port_num);
+	}
+	
+	/**
+	 * Client Mode
+	 * @param port_num
+	 * @param server
+	 */
+	public Server(String port_num, String server) {
+		PORT_NUMBER = Integer.parseInt(port_num);
+		serverName = server;
+	}
+	
+	// TODO after constructor straight away connect
+	public void connect(String serverName, boolean serverMode, Game game) {
 		if (!serverMode) {
 			try {
 				Socket clientSocket = new Socket(serverName, PORT_NUMBER);
@@ -58,8 +78,6 @@ public class Server {
 				}
 			}
 			catch (Exception e) {
-				System.out.println(e.getMessage());
-				e.printStackTrace();
 			}
 		}
 	}
