@@ -1,7 +1,7 @@
 package server;
 
 import game.Game;
-import game.Move;
+import AI.AI;
 
 public class BackgammonProtocol {
 	private static final int WAITING_FOR_CLIENT = 0;
@@ -21,13 +21,32 @@ public class BackgammonProtocol {
 		}
 		if (state == SENDING_MOVES) {
 			game.play(parseInput(input));
-			return game.getMoveMade();
+			return AI.lastMoveMade;
 		}
 		return null;
 	}
 	
-	public Move parseInput(String input) {
+	public OpponentMove[] parseInput(String input) {
 		String[] split = input.split(":");
-		String[] startEnd = split[1].split(",");
+		String diceRoll = split[0];
+		int[] diceRollArray = {Integer.parseInt(diceRoll.substring(0,1)), Integer.parseInt(diceRoll.substring(1,2))};
+		String[] startEndBracketBar = split[1].split(",");
+		String moves[][] = new String[4][1];
+		moves[0] = startEndBracketBar[0].split("|");
+		moves[1] = startEndBracketBar[1].split("|");
+		if (startEndBracketBar.length == 4) {
+			moves[2] = startEndBracketBar[2].split("|");
+			moves[3] = startEndBracketBar[3].split("|");
+			OpponentMove[] output = new OpponentMove[4];
+			for (int i = 0; i < output.length; i++) {
+				output[i] = new OpponentMove(diceRollArray, Integer.parseInt(moves[i][0]), Integer.parseInt(moves[i][1]));
+			}
+			return output;
+		}
+		OpponentMove[] output = new OpponentMove[2];
+		for (int i = 0; i < output.length; i++) {
+			output[i] = new OpponentMove(diceRollArray, Integer.parseInt(moves[i][0]), Integer.parseInt(moves[i][1]));
+		}
+		return output;	
 	}
 }

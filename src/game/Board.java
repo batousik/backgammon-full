@@ -16,6 +16,10 @@ public class Board {
 
 	private Color opponent;
 	private Color currPlayer;
+	
+	public int[] getDices() {
+		return this.dices;
+	}
 
 	public Board() {
 		// creating fields on the board

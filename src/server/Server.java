@@ -1,7 +1,7 @@
 package server;
 
 import game.Game;
-
+import AI.AI;
 import java.io.*;
 import java.net.*;
 
@@ -16,9 +16,26 @@ public class Server {
 				Socket clientSocket = new Socket(serverName, PORT_NUMBER);
 				PrintWriter output = new PrintWriter(clientSocket.getOutputStream());
 				BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+				String inputLine;
+				while((inputLine = input.readLine()) != null) {
+					if (inputLine.equals("YouWin,Bye") || inputLine.equals("quit")) {
+						break;
+					}
+					if(inputLine.equals("hello")) {
+						output.print("newgame");
+					}
+					else {
+						output.print(AI.lastMoveMade);
+					}
+				}
+				
+				input.close();
+				output.close();
+				clientSocket.close();
 			}
 			catch (Exception e) {
-				
+				System.out.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}
 		else {
@@ -41,7 +58,8 @@ public class Server {
 				}
 			}
 			catch (Exception e) {
-				
+				System.out.println(e.getMessage());
+				e.printStackTrace();
 			}
 		}
 	}

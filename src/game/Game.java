@@ -3,7 +3,7 @@ package game;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-
+import server.OpponentMove;
 import AI.AI;
 
 public class Game {
@@ -21,23 +21,29 @@ public class Game {
 		board = new Board();
 	}
 	
-	public void play(Move opponentMove) {
-			dice.trowDices();
-			board.setDices(dice.getDices());
+	public void play(OpponentMove[] opponentMove) {
+			board.setDices(opponentMove[0].getDiceRoll());
 			board.setPlayers(true);
 			board.searchForValideMoves();
 			movesLeft = board.isValidMovesLeft();
 			
+			for (int j = 0; j < opponentMove.length; j++) {
+				for (int i = 0; i < board.getValidMoves().size(); i++) {
+					if (opponentMove[j].getStartPos() == board.getValidMoves().get(i).getStartField()) {
+						if (opponentMove[j].getEndPos() == board.getValidMoves().get(i).getEndField()) {
+							board.move(i);
+						}
+					}
+				}
+			}
 			
 			
 			changePlayer();
+			dice.trowDices();
+			board.setDices(dice.getDices());
 			new AI(board);
 	}
 	
-	public String getMoveMade() {
-		
-	}
-
 	private void draw() {
 		System.out.println();
 		for (int i = 13; i<25;i++) {

@@ -5,7 +5,7 @@ import game.*;
 public class ScoredMove {
 	
 	private int score;
-	private Move move;;
+	private Move move;
 	
 	public ScoredMove(Move move) {
 		this.move = move;
