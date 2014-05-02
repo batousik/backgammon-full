@@ -28,6 +28,7 @@ public class Server {
 					}
 					else {
 						game.play(null);
+						//TODO: Need to get all moves, not just 1.
 						output.print(AI.lastMoveMade);
 					}
 				}

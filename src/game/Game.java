@@ -31,18 +31,19 @@ public class Game {
 			board.searchForValidMoves();
 			movesLeft = board.hasValidMovesLeft();
 			
-			for (int j = 0; j < opponentMove.length; j++) {
-				for (int i = 0; i < board.getValidMoves().size(); i++) {
-					if (opponentMove[j].getStartPos() == board.getValidMoves().get(i).getStartField()) {
-						if (opponentMove[j].getEndPos() == board.getValidMoves().get(i).getEndField()) {
-							board.move(i);
+			if(opponentMove != null) {
+				for (int j = 0; j < opponentMove.length; j++) {
+					for (int i = 0; i < board.getValidMoves().size(); i++) {
+						if (opponentMove[j].getStartPos() == board.getValidMoves().get(i).getStartField()) {
+							if (opponentMove[j].getEndPos() == board.getValidMoves().get(i).getEndField()) {
+								board.move(i);
+							}
 						}
 					}
 				}
+				changePlayer();
 			}
 			
-			
-			changePlayer();
 			dice.throwDices();
 			board.setDices(dice.getDices());
 //			for (/*number of moves*/) {
