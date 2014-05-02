@@ -27,10 +27,12 @@ public class Server {
 						output.print("newgame");
 					}
 					else {
+
 						if (firstMove){
 							game.play(null);
 							firstMove = false;
 						}
+
 						output.print(AI.lastMoveMade);
 					}
 				}

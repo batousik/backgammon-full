@@ -24,7 +24,7 @@ public class AI {
 		this.possibleMoves = board.getValidMoves();
 		scoredMoves = new ScoredMove[possibleMoves.size()];
 		for (int i = 0; i < possibleMoves.size(); i++) {
-			scoredMoves[i] = new ScoredMove(possibleMoves.get(i));
+			scoredMoves[i] = new ScoredMove(possibleMoves.get(i), board);
 		}
 		int max = 0;
 		for (int i = 0; i < possibleMoves.size(); i++) {
