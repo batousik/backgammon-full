@@ -276,7 +276,6 @@ public class MainWindow extends JFrame implements ActionListener,
 		board = new Board();
 		// get who Starts
 		isWhite = board.getWhoStarts();
-		// print whos move
 	}
 
 	/*
@@ -304,7 +303,12 @@ public class MainWindow extends JFrame implements ActionListener,
 		placeStones(board.getAmountArray(), board.getColorArray());
 		// evaluating first set of valid moves
 		board.searchForValidMoves();
-		// isMovesLeft = board.isValidMovesLeft();
+		isMovesLeft = board.hasValidMovesLeft();
+		// if no possible moves found change the player
+		if (!isMovesLeft) {
+			changePlayer();
+			makeTurn();
+		}
 	}
 
 	/**
@@ -342,13 +346,6 @@ public class MainWindow extends JFrame implements ActionListener,
 	 * case no moves left change player
 	 */
 	private void moveMade() {
-		//TODO remove
-		for(JLabel j : stones){
-			System.out.println(j.getSize().toString() + "  z: " + gamePanel.getComponentZOrder(j));
-		}
-		
-		System.out.println( "  z: " + gamePanel.getComponentZOrder(background));
-		
 		// move the piece
 		board.move(chosenMove);
 		// check if game won
@@ -614,8 +611,6 @@ public class MainWindow extends JFrame implements ActionListener,
 		}
 		for (int i = 0; i < amount; i++) {
 			stones[currStone].setIcon(picture);
-			//TODO remove
-			System.out.println(board.getColorArray()[fieldID].toString());
 			stones[currStone].setOpaque(true);
 			if (fieldID < 13 || fieldID == 27) {
 				stones[currStone].setLocation(locations.get(fieldID)[0],
