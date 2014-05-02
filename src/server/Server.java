@@ -1,72 +1,162 @@
 package server;
 
 import game.Game;
+import game.Move;
+import gui.MainWindow;
 import AI.AI;
+
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+
+import javax.print.attribute.standard.Finishings;
 
 import main.Main;
 
-public class Server {
+public class Server implements Runnable {
 	private static int PORT_NUMBER = 5001;
-	private static String serverName = "127.0.0.1";
-	static boolean firstMove = true;
-	// TODO This method should be static, we only ever have one connection. Don't refactor live code.
-	public static void connect(String serverName, boolean serverMode, Game game) {
+	private static boolean firstMove = true;
+
+	private boolean serverMode;
+	private MainWindow mw;
+	private String serverName = "127.0.0.1";
+	public volatile PrintWriter output;
+	public volatile boolean isMoveReceived;
+	public volatile String moveReceived;
+
+	public Server(String serverName, String serverPort, boolean serverMode,
+			MainWindow mw) {
+		Thread vasya = new Thread(this);
+		if (serverName != null) {
+			this.serverName = serverName;
+		}
+		this.serverMode = serverMode;
+		this.mw = mw;
+		vasya.start(); // ne ostav serdce musoram
+	}
+
+	// TODO This method should be static, we only ever have one connection.
+	// Don't refactor live code.
+	public void connect() {
 		if (!serverMode) {
 			try {
 				Socket clientSocket = new Socket(serverName, PORT_NUMBER);
-				PrintWriter output = new PrintWriter(clientSocket.getOutputStream());
-				BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+				output = new PrintWriter(clientSocket.getOutputStream(), true);
+				BufferedReader input = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
 				String inputLine;
-				while((inputLine = input.readLine()) != null) {
-					if (inputLine.equals("YouWin,Bye") || inputLine.equals("quit")) {
+				while ((inputLine = input.readLine()) != null) {
+					System.out.println("MESSAGE FROM SERVER '" + inputLine
+							+ "'");
+					if (inputLine.equals("YouWin,Bye")
+							|| inputLine.equals("quit")) {
 						break;
 					}
-					if(inputLine.equals("hello")) {
-						output.print("newgame");
-					}
-					else {
 
-						if (firstMove){
-							game.play(null);
-							firstMove = false;
+					if (inputLine.equals("hello")) {
+						output.println("newgame");
+					} else if (inputLine.equals("OK")) {
+						mw.myTurnInNetwork = true;
+						if (mw.myTurnInNetwork) {
+							System.out.println(mw.myTurnInNetwork);
+							
+							
+						} else {
+							output.println("pass");
 						}
+						
+					} else {
+						while (mw.getBoard().hasValidMovesLeft()) {
 
-						output.print(AI.lastMoveMade);
+						}
+						output.println(parseMoveMade(mw.getMovesMade()));
+
+						isMoveReceived = true;
+						moveReceived = inputLine;
+						System.out.println(inputLine);
 					}
 				}
-				
+
 				input.close();
 				output.close();
 				clientSocket.close();
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				System.out.println(e.getMessage());
 				e.printStackTrace();
 			}
-		}
-		else {
+		} else {
 			try {
 				ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
 				Socket clientSocket = serverSocket.accept();
-				PrintWriter output = new PrintWriter(clientSocket.getOutputStream());
-				BufferedReader input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				
-				BackgammonProtocol protocol = new BackgammonProtocol();
+				output = new PrintWriter(clientSocket.getOutputStream(), true);
+				BufferedReader input = new BufferedReader(
+						new InputStreamReader(clientSocket.getInputStream()));
+
+				output.println("hello");
+
 				String inputLine;
-				String outputLine;
-				
 				while ((inputLine = input.readLine()) != null) {
-					outputLine = protocol.process(inputLine, game);
-					output.println(outputLine);
-					if (inputLine.equals("quit") || inputLine.equals("YouWin,Bye")) {
+					System.out.println("MESSAGE FROM CLIENT '" + inputLine
+							+ "' ");
+					if (inputLine.equals("newgame")) {
+						output.println("OK");
+						System.out.println("server got newgame");
+					} else if (inputLine.equals("pass")) {
+						mw.setMyTurnInNetwork(true);
+						mw.setUpMove();
+						while (mw.getBoard().hasValidMovesLeft()) {
+
+						}
+						output.println(parseMoveMade(mw.getMovesMade()));
+					} else if (inputLine.equals("quit")
+							|| inputLine.equals("YouWin,Bye")) {
 						break;
+					} else {
+						isMoveReceived = true;
+						moveReceived = inputLine;
+						mw.setUpMove();
+						while (mw.getBoard().hasValidMovesLeft()) {
+
+						}
+						output.println(parseMoveMade(mw.getMovesMade()));
 					}
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 			}
 		}
+	}
+
+	@Override
+	public void run() {
+		this.connect();
+	}
+
+	public void sendMsg(String msg) {
+		output.println(msg);
+	}
+
+	private String parseMoveMade(ArrayList<Move> movesMade) {
+		String output = mw.getBoard().getDices()[0] + "-"
+				+ mw.getBoard().getDices()[0] + ":";
+		for (int i = 0; i < movesMade.size(); i++) {
+
+			output += "(";
+			movesMade.get(i).getStartField();
+			output += "|";
+			movesMade.get(i).getEndField();
+			if (i != movesMade.size() - 1) {
+				output += "),";
+			} else {
+				output += ");";
+			}
+		}
+		return output;
+	}
+
+	public String getMoveReceived() {
+		String returnStr = moveReceived;
+		moveReceived = "";
+		isMoveReceived = false;
+		return returnStr;
 	}
 }

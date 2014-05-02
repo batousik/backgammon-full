@@ -26,7 +26,7 @@ public class BackgammonProtocol {
 		return null;
 	}
 	
-	public OpponentMove[] parseInput(String input) {
+	public static OpponentMove[] parseInput(String input) {
 		String[] split = input.split(":");
 		String diceRoll = split[0];
 		int[] diceRollArray = {Integer.parseInt(diceRoll.substring(0,1)), Integer.parseInt(diceRoll.substring(1,2))};
@@ -49,4 +49,9 @@ public class BackgammonProtocol {
 		}
 		return output;	
 	}
+
+	private void sendMove() {
+			
+	}
+	
 }

@@ -12,6 +12,7 @@ public class AI {
 	public static final int SINGLE_CHECKER_WEIGHT = -8;
 	public static final int ENTER_HOME_WEIGHT = 15;
 	
+	
 	private ArrayList<Move> possibleMoves;
 	private ScoredMove[] scoredMoves;
 	private int bestMoveIndex;
