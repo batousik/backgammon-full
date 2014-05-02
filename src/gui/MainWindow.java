@@ -34,6 +34,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
+import com.sun.corba.se.spi.ior.MakeImmutable;
+
 import server.BackgammonProtocol;
 import server.OpponentMove;
 import server.Server;
@@ -68,7 +70,7 @@ public class MainWindow extends JFrame implements ActionListener,
 	private static final int MAX_NO_PER_FIELD_NO_STACK = 6;
 
 	public boolean sukachange = false;
-	
+
 	// x coord, y coord, width, height
 	private static final int[] INFO_LABEL_BOUNDS = new int[] { 350, 560, 100,
 			20 };
@@ -135,7 +137,7 @@ public class MainWindow extends JFrame implements ActionListener,
 	private ArrayList<Move> movesMade;
 
 	public boolean myTurnInNetwork;
-	
+
 	public volatile boolean finished;
 
 	// AI
@@ -161,7 +163,7 @@ public class MainWindow extends JFrame implements ActionListener,
 
 	private int currStone;
 	private int chosenMove;
-	
+
 	private game.Color aiColor;
 	private game.Color humanColor;
 
@@ -341,8 +343,24 @@ public class MainWindow extends JFrame implements ActionListener,
 		changeMoveCondition();
 	}
 
+	public void nextTurn() {
+		// throw and set dices for first move
+		dice.throwDices();
+		// change pictures on dices
+		dices[0].setIcon(diceFaces[dice.getDices()[0]]);
+		dices[1].setIcon(diceFaces[dice.getDices()[1]]);
+		// setting dices to board
+		board.setDices(dice.getDices());
+		// change player
+		changePlayer();
+		// set current player
+		board.setPlayers(isWhite);
+		// UPdating info label
+		whosTurn.setText(board.getCurrentPlayer().toString() + " TURN");
+		changeMoveCondition();
+	}
+
 	private void changeMoveCondition() {
-		if(sukachange) return;
 		// drawing stones to start locations
 		placeStones(board.getAmountArray(), board.getColorArray());
 		// evaluating first set of valid moves
@@ -351,80 +369,68 @@ public class MainWindow extends JFrame implements ActionListener,
 		// if no possible moves found change the player
 		if (!isMovesLeft) {
 			changePlayer();
-
 			setUpMove();
+			/*
+			 * if (networkingEnabled) {
+			 * currentServer.sendMsg(parseMoveMade(movesMade)); while
+			 * (!currentServer.isMoveReceived) { finished = false; }
+			 * changePlayer();
+			 * parseOppMove(BackgammonProtocol.parseInput(currentServer
+			 * .getMoveReceived())); changePlayer(); setUpMove();
+			 * 
+			 * } else
+			 */if (aiVShumanMode) {
 
-			if (networkingEnabled) {
-				currentServer.sendMsg(parseMoveMade(movesMade));
-				while (!currentServer.isMoveReceived) {
-					finished = false;
-				}
-				changePlayer();
-				parseOppMove(BackgammonProtocol.parseInput(currentServer
-						.getMoveReceived()));
-				changePlayer();
-				setUpMove();
-
-			} else if (aiVShumanMode) {
-				if(board.getCurrentPlayer() == aiColor){
+				System.out.println(aiColor);
+				System.out.println(board.getCurrentPlayer());
+				if (board.getCurrentPlayer() == aiColor) {
 					aiTurn();
 				}
-				sukachange = true;
-				// // throw and set dices for first move
-				// dice.throwDices();
-				// // change pictures on dices
-				// dices[0].setIcon(diceFaces[dice.getDices()[0]]);
-				// dices[1].setIcon(diceFaces[dice.getDices()[1]]);
-				// // setting dices to board
-				// board.setDices(dice.getDices());
-				// // set current player
-				// board.setPlayers(isWhite);
-				// // UPdating info label
-				// whosTurn.setText(board.getCurrentPlayer().toString() +
-				// " TURN");
-				// while (board.hasValidMovesLeft()) {
-				// aiTurn();
-				// // add to moves made
-				// movesMade.add(board.getValidMoves().get(chosenMove));
-				// // move the piece
-				// board.move(chosenMove);
-				// // redrawing board to keep stones nicely in the line
-				// placeStones(board.getAmountArray(), board.getColorArray());
 			}
-
 		}
 	}
-	
-	
 
 	/**
 	 * Move made win check board state is changed redraw board, update moves in
 	 * case no moves left change player
 	 */
 	private void moveMade() {
-		// add to moves made
-		//movesMade.add(board.getValidMoves().get(chosenMove));
 		// move the piece
 		board.move(chosenMove);
-		/**
-		 * send message about move
-		 * 
-		 * 
-		 */
-
-		// redrawing board to keep stones nicely in the line
+		// drawing stones to start locations
 		placeStones(board.getAmountArray(), board.getColorArray());
+		// evaluating first set of valid moves
+		board.searchForValidMoves();
+		isMovesLeft = board.hasValidMovesLeft();
 
 		// check if game won
 		if (board.checkWin() != GameState.STILL_PLAYING) {
 			if (board.checkWin() == GameState.WHITE_WON) {
 				winMessage(game.Color.GOLD.toString());
+				initBackgammon();
 			} else {
 				winMessage(game.Color.SILVER.toString());
+				initBackgammon();
 			}
 		}
-
 		changeMoveCondition();
+	}
+
+	private void aiTurn() {
+		while (board.hasValidMovesLeft()) {
+			simpleAi = new AI(board);
+			chosenMove = simpleAi.getChosenMove();
+			board.move(chosenMove);
+			board.searchForValidMoves();
+			isMovesLeft = board.hasValidMovesLeft();
+			changeMoveCondition();
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
 	}
 
 	private void initHighLights() {
@@ -441,16 +447,6 @@ public class MainWindow extends JFrame implements ActionListener,
 			// TODO make it into half see through
 			gamePanel.add(highLights[i]);
 		}
-	}
-
-	private void aiTurn() {
-		while(board.hasValidMovesLeft()){
-			simpleAi = new AI(board);
-			chosenMove = simpleAi.getChosenMove();
-			moveMade();
-		}
-		changePlayer(); // RABOTAI SUKA
-		board.setPlayers(isWhite);
 	}
 
 	/**
@@ -485,8 +481,6 @@ public class MainWindow extends JFrame implements ActionListener,
 					gameTypes, "null");
 
 			if ((gameType != null) && (gameType.length() > 0)) {
-				// TODO run selected game type
-				// TODO different AI dificulties
 				switch (gameType) {
 				case "Local vs Human":
 					setUpMove();
@@ -497,10 +491,12 @@ public class MainWindow extends JFrame implements ActionListener,
 
 					if (!board.getWhoStarts()) {
 						// then ai starts
+						isWhite = false;
 						aiColor = game.Color.GOLD;
 						humanColor = game.Color.SILVER;
 						aiTurn();
 					} else {
+						isWhite = true;
 						aiColor = game.Color.SILVER;
 						humanColor = game.Color.GOLD;
 					}
@@ -556,8 +552,8 @@ public class MainWindow extends JFrame implements ActionListener,
 					while (currentServer.output == null) {
 						// wait for connection
 					}
-					
-					if (true) {// board.getWhoStarts()){
+
+					if (board.getWhoStarts()){
 						myTurnInNetwork = true;
 						setUpMove();
 					} else {
@@ -912,10 +908,9 @@ public class MainWindow extends JFrame implements ActionListener,
 			}
 		}
 	}
-	
+
 	private String parseMoveMade(ArrayList<Move> movesMade) {
-		String output = board.getDices()[0] + "-"
-				+ board.getDices()[0] + ":";
+		String output = board.getDices()[0] + "-" + board.getDices()[0] + ":";
 		for (int i = 0; i < movesMade.size(); i++) {
 
 			output += "(";

@@ -50,15 +50,14 @@ public class Game {
 		changePlayer();
 		dice.throwDices();
 		board.setDices(dice.getDices());
-		// for (/*number of moves*/) {
-		// //need some way to store moves made by AI
-		// new AI(board);
-		// }
-		// TODO JACK
 	}
 
 	// TODO remove text based interface
 
+	/** 
+	 * CLI representaion
+	 * @version 1.0
+	 */
 	private void draw() {
 		System.out.println();
 		for (int i = 13; i < 25; i++) {

@@ -12,7 +12,11 @@ import java.util.ArrayList;
 import javax.print.attribute.standard.Finishings;
 
 import main.Main;
-
+/**
+ * 
+ * @author 130017964
+ * @version 4.20(release)
+ */
 public class Server implements Runnable {
 	private static int PORT_NUMBER = 5001;
 	private static boolean firstMove = true;

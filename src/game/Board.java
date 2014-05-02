@@ -232,15 +232,6 @@ public class Board implements Cloneable {
 			}
 
 		}
-
-		// TODO remove these
-		// System.out.println();
-		// for (int i = 0; i < validMoves.size(); i++) {
-		// System.out.println("[" + i + "] " + validMoves.get(i).toString());
-		// }
-		// System.out.println(currPlayer.toString());
-		// System.out.println();
-
 	}
 
 	/**
@@ -319,8 +310,6 @@ public class Board implements Cloneable {
 	 */
 	public void move(int moveIndex) {
 		Move chosenMove = validMoves.get(moveIndex);
-		// TODO NEXT LINE REMOVE
-		// System.out.println(chosenMove);
 		int start = chosenMove.getStartField();
 		int end = chosenMove.getEndField();
 		switch (chosenMove.getMoveType()) {
@@ -364,7 +353,6 @@ public class Board implements Cloneable {
 			}
 			// check if field is left empty
 			checkIfFieldLeftEmpty(start);
-			// TODO
 			useMove(chosenMove.getBEAROFFMoveAmount());
 			break;
 		default:
@@ -440,7 +428,6 @@ public class Board implements Cloneable {
 	 * @return a sum of valid move amounts
 	 */
 	private int refineValidMoves(Board passedState, int currentRecStep) {
-		// TODO makeIT
 		Board MoveAheadBoard = new Board(passedState);
 		ArrayList<Board> furtherBoards = new ArrayList<Board>();
 
@@ -461,8 +448,6 @@ public class Board implements Cloneable {
 					.get(i).getMoveAmount();
 			furtherBoards.get(last).move(i);
 			furtherBoards.get(last).searchForValidMovesNoRefining();
-			// System.out.println(furtherBoards.get(last).getValidMoves());
-			// TODO rem
 
 			if (furtherBoards.get(last).hasValidMovesLeft()) {
 				amountUsedPerMoves[i] += refineValidMoves(
@@ -471,10 +456,6 @@ public class Board implements Cloneable {
 		}
 
 		if (currentRecStep == 0) {
-			for (int i = 0; i < amountUsedPerMoves.length; i++) {
-				System.out.println(amountUsedPerMoves[i]);
-
-			}
 			int bestMove = 0;
 			// finding best possible choice
 			// for black player amounts are less than zero, multiply them by -1
