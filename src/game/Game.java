@@ -28,8 +28,8 @@ public class Game {
 	public void play(OpponentMove[] opponentMove) {
 			board.setDices(opponentMove[0].getDiceRoll());
 			board.setPlayers(true);
-			board.searchForValideMoves();
-			movesLeft = board.isValidMovesLeft();
+			board.searchForValidMoves();
+			movesLeft = board.hasValidMovesLeft();
 			
 			for (int j = 0; j < opponentMove.length; j++) {
 				for (int i = 0; i < board.getValidMoves().size(); i++) {
@@ -45,10 +45,11 @@ public class Game {
 			changePlayer();
 			dice.throwDices();
 			board.setDices(dice.getDices());
-			for (/*number of moves*/) {
-				//need some way to store moves made by AI
-				new AI(board);
-			}
+//			for (/*number of moves*/) {
+//				//need some way to store moves made by AI
+//				new AI(board);
+//			}
+			// TODO JACK
 	}
 	
 
