@@ -5,7 +5,8 @@ public class Move {
 	private int startField;
 	private int endField;
 	private int moveAmount;
-
+	private int specialBearOff;
+	
 	public Move(MoveType mt, int start, int moveAmount) {
 		moveType = mt;
 		startField = start;
@@ -14,11 +15,12 @@ public class Move {
 	}
 	
 	// for bear off move
-	public Move(MoveType mt, int start, int moveAmount, int endPos) {
+	public Move(MoveType mt, int start, int moveAmount, int endPos, int actualMoveAmount) {
 		moveType = mt;
 		startField = start;
 		this.moveAmount = moveAmount;
 		endField = endPos;
+		specialBearOff = actualMoveAmount;
 	}
 
 	@Override
@@ -41,5 +43,9 @@ public class Move {
 
 	public int getMoveAmount() {
 		return moveAmount;
+	}
+	
+	public int getBEAROFFMoveAmount() {
+		return specialBearOff;
 	}
 }

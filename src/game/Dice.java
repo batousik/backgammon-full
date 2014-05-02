@@ -17,6 +17,8 @@ public class Dice {
 	}
 	
 	public int[] getDices() {
-		return new int[]{diceX,diceY};
+		// TODO change
+//		return new int[]{diceX,diceY};
+		return new int[]{5,6};
 	}
 }

@@ -5,6 +5,20 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
+/**
+ * 
+ * @author 130017964
+ * @version 4.20(release)
+ * 
+ *          Board for the backgammon is represented by two arrays, both of size
+ *          28: 24 playable fields, 2 Bar places for each player and 2 bearoff
+ *          places for each player. One array keeps color of pieces currently
+ *          stored on it and second keeps the amount of pieces stored on the
+ *          field. White player moves from start of array indexes to the end,
+ *          positive direction and black player moves from the end of arrays
+ *          towards negative indexes in order to achieve winning condition
+ * 
+ */
 public class Board implements Cloneable {
 	public static final int WHITEBAR = 0, BLACKBAR = 25, WHITEBEAROF = 26,
 			BLACKBEAROF = 27, TOTAL_NO_OF_FIELDS = 28,
@@ -132,36 +146,36 @@ public class Board implements Cloneable {
 		return this.dices;
 	}
 
-	
-
-	
-
 	/**
-	 * clear valid moves list evaluate possible moves from dices find valid
-	 * moves
+	 * clear valid moves list evaluate possible moves from dices If there are
+	 * possible moves - find valid moves
 	 */
 	public void searchForValidMoves() {
 		validMoves.clear();
 		evalDices();
-		findValidMoves();
-		// TODO refine valid moves
-		refineValidMoves(this, 0);
+		if (possibleMoves.size() != 0) {
+			findValidMoves();
+			refineValidMoves(this, 0);
+		}
 	}
+
 	/**
-	 * does the same as method above:
-	 * clear valid moves list evaluate possible moves from dices find valid
-	 * moves
-	 * But doesn't refine moves
+	 * does the same as method above: clear valid moves list evaluate possible
+	 * moves from dices then find valid moves but doesn't refine moves it is
+	 * used for recursive check later on
 	 */
 	public void searchForValidMovesNoRefining() {
 		validMoves.clear();
 		evalDices();
 		findValidMoves();
 	}
-	
 
+	/**
+	 * Method implements backgammon game rules as on wikipedia website, no
+	 * doubling cube is used
+	 */
 	private void findValidMoves() {
-
+		// used to check if there are pieces on the bar
 		boolean barFlag = true;
 
 		// playable area, going through all fields
@@ -169,7 +183,7 @@ public class Board implements Cloneable {
 			// move own piece check
 			if (colorArray[i] == currPlayer && amountArray[i] > 0) {
 				for (Integer amount : possibleMoves) {
-					// but bear off move 
+					// but bear off move
 
 					if (isAllAtHome(currPlayer)) {
 						// bear of move
@@ -178,16 +192,17 @@ public class Board implements Cloneable {
 						if (currPlayer == Color.GOLD) {
 							if ((i + amount) >= BLACKBAR) {
 								validMoves.add(new Move(MoveType.BEAROFF, i,
-										amount-i, WHITEBEAROF));
+										BLACKBAR - i, WHITEBEAROF, amount));
 							}
 						} else {
 							if ((i + amount) <= WHITEBAR) {
 								validMoves.add(new Move(MoveType.BEAROFF, i,
-										amount-i, BLACKBEAROF));
+										WHITEBAR - i, BLACKBEAROF, amount));
 							}
 						}
 					}
-
+					if (amount == 5)
+						;
 					// boundary check
 					// has to be playable area only
 					// move to: for white up untill BlackBar, for black up until
@@ -218,7 +233,6 @@ public class Board implements Cloneable {
 
 		}
 
-	
 		// TODO remove these
 		// System.out.println();
 		// for (int i = 0; i < validMoves.size(); i++) {
@@ -228,8 +242,6 @@ public class Board implements Cloneable {
 		// System.out.println();
 
 	}
-
-	
 
 	/**
 	 * Method to check if a given player has pieces on his bar
@@ -278,8 +290,6 @@ public class Board implements Cloneable {
 		return true;
 	}
 
-
-
 	/**
 	 * evaluates dices to find all possible move amounts from the dices
 	 */
@@ -310,7 +320,7 @@ public class Board implements Cloneable {
 	public void move(int moveIndex) {
 		Move chosenMove = validMoves.get(moveIndex);
 		// TODO NEXT LINE REMOVE
-		//System.out.println(chosenMove);
+		// System.out.println(chosenMove);
 		int start = chosenMove.getStartField();
 		int end = chosenMove.getEndField();
 		switch (chosenMove.getMoveType()) {
@@ -325,6 +335,7 @@ public class Board implements Cloneable {
 			// check if moved to empty field
 			if (colorArray[end] == Color.NONE)
 				colorArray[end] = currPlayer;
+			useMove(chosenMove.getMoveAmount());
 			break;
 		case CAPTURE:
 			amountArray[start] -= 1;
@@ -342,6 +353,7 @@ public class Board implements Cloneable {
 			} else {
 				amountArray[WHITEBAR] += 1;
 			}
+			useMove(chosenMove.getMoveAmount());
 			break;
 		case BEAROFF:
 			amountArray[start] -= 1;
@@ -352,18 +364,21 @@ public class Board implements Cloneable {
 			}
 			// check if field is left empty
 			checkIfFieldLeftEmpty(start);
-
+			// TODO
+			useMove(chosenMove.getBEAROFFMoveAmount());
+			break;
 		default:
 			break;
 		}
-		// validMoves.clear();
-		useMove(chosenMove.getMoveAmount());
+
 	}
 
 	/**
-	 * Method checks if field was left empty then changes color to none
-	 * but excluding blackbar, whitebar, blackbearoff, whitebearoff
-	 * @param fieldID field to check
+	 * Method checks if field was left empty then changes color to none but
+	 * excluding blackbar, whitebar, blackbearoff, whitebearoff
+	 * 
+	 * @param fieldID
+	 *            field to check
 	 */
 	private void checkIfFieldLeftEmpty(int fieldID) {
 		if (amountArray[fieldID] == 0 && !(colorArray[fieldID] == Color.NONE)
@@ -373,6 +388,10 @@ public class Board implements Cloneable {
 		}
 	}
 
+	/**
+	 * 
+	 * @param moveAmount
+	 */
 	private void useMove(int moveAmount) {
 		switch (dices.length) {
 		case 4:
@@ -404,55 +423,120 @@ public class Board implements Cloneable {
 	/**
 	 * implements rule, where if with some moves you can use more moves, you
 	 * have to use them, and other moves become invalid
+	 * 
+	 * makes a move and then checks if further moves are possible if so, counts
+	 * up their move amount and returns it Duplicates for valid moves are
+	 * removed as the rule cares that one of the best possible choices is taken
+	 * and if move will have smaller amount than there is it is counted as
+	 * invalid at recursion step 0, sums are checked against each other and the
+	 * smallest values are removed as they are invalid
+	 * 
+	 * @param passedState
+	 *            passed in state of the board to clone it and perform moves on
+	 *            it
+	 * @param currentRecStep
+	 *            to execute staff in the end just before sums of initial valid
+	 *            moves are added up, to remove ones with least amount
+	 * @return a sum of valid move amounts
 	 */
 	private int refineValidMoves(Board passedState, int currentRecStep) {
 		// TODO makeIT
 		Board MoveAheadBoard = new Board(passedState);
 		ArrayList<Board> furtherBoards = new ArrayList<Board>();
-		
-		Integer[] amountUsedPerMoves = new Integer[MoveAheadBoard.getValidMoves().size()];
-		for (int i = 0; i<amountUsedPerMoves.length; i++) {
+
+		// Initializing array for move amounts
+		Integer[] amountUsedPerMoves = new Integer[MoveAheadBoard
+				.getValidMoves().size()];
+		for (int i = 0; i < amountUsedPerMoves.length; i++) {
 			amountUsedPerMoves[i] = 0;
 		}
-		
+
 		// A player must use both numbers of a roll if this is legally possible
 		// (or all four numbers of a double).
 		for (int i = 0; i < MoveAheadBoard.getValidMoves().size(); i++) {
 			furtherBoards.add(new Board(MoveAheadBoard));
 			// getting last board and making a move for it
 			int last = furtherBoards.size() - 1;
-			amountUsedPerMoves[i] = furtherBoards.get(last).getValidMoves().get(i).getMoveAmount();
+			amountUsedPerMoves[i] = furtherBoards.get(last).getValidMoves()
+					.get(i).getMoveAmount();
 			furtherBoards.get(last).move(i);
 			furtherBoards.get(last).searchForValidMovesNoRefining();
-			//System.out.println(furtherBoards.get(last).getValidMoves());
+			// System.out.println(furtherBoards.get(last).getValidMoves());
+			// TODO rem
+
 			if (furtherBoards.get(last).hasValidMovesLeft()) {
-				amountUsedPerMoves[i]+=refineValidMoves(furtherBoards.get(last), currentRecStep + 1);
+				amountUsedPerMoves[i] += refineValidMoves(
+						furtherBoards.get(last), currentRecStep + 1);
 			}
 		}
-		int returnValue = 0;
-		if (currentRecStep == 0){
-			for(int i = 0; i< amountUsedPerMoves.length;i++){
+
+		if (currentRecStep == 0) {
+			for (int i = 0; i < amountUsedPerMoves.length; i++) {
 				System.out.println(amountUsedPerMoves[i]);
+
+			}
+			int bestMove = 0;
+			// finding best possible choice
+			// for black player amounts are less than zero, multiply them by -1
+			// check if there were any valid moves and amount used per moves has
+			// something inside
+
+			// for black player * -1
+			if (currPlayer == Color.SILVER) {
+				for (int i = 0; i < amountUsedPerMoves.length; i++) {
+					amountUsedPerMoves[i] *= -1;
+				}
+			}
+			// finding best solution
+			for (int i = 0; i < amountUsedPerMoves.length; i++) {
+				if (amountUsedPerMoves[i] > bestMove) {
+					bestMove = amountUsedPerMoves[i];
+				}
+			}
+
+			// if a move has smaller of dices amount used - remove it
+			// create temp array and put all the valid moves in it
+			ArrayList<Move> tempMovesList = new ArrayList<Move>();
+			for (int i = 0; i < amountUsedPerMoves.length; i++) {
+				if (amountUsedPerMoves[i] == bestMove) {
+					tempMovesList.add(validMoves.get(i));
+				}
+			}
+
+			// reinitialise valid moves array with tempArray
+			validMoves = new ArrayList<Move>(tempMovesList);
+
+		}
+
+		int returnValue = 0;
+
+		// find what could be best move
+		if (currPlayer == Color.SILVER) {
+			for (int i = 0; i < amountUsedPerMoves.length; i++) {
+				if (returnValue > amountUsedPerMoves[i]) {
+					returnValue = amountUsedPerMoves[i];
+				}
+			}
+		} else {
+			for (int i = 0; i < amountUsedPerMoves.length; i++) {
+				if (returnValue < amountUsedPerMoves[i]) {
+					returnValue = amountUsedPerMoves[i];
+				}
 			}
 		}
-		 removeDuplicates(amountUsedPerMoves);
-		for(int i = 0; i< amountUsedPerMoves.length;i++){
-			returnValue+=amountUsedPerMoves[i];
-		}
-		
-		
+		// return best value
 		return returnValue;
-		// When only one number can be played, the player must play that number.
-		// Or if either number can be played but not both, the player must play
-		// the larger one.
-		// When neither number can be used, the player loses his turn. In the
-		// case of doubles,
-		// when all four numbers cannot be played, the player must play as many
-		// numbers as he can.
+		/*
+		 * RULES When only one number can be played, the player must play that
+		 * number. Or if either number can be played but not both, the player
+		 * must play the larger one. When neither number can be used, the player
+		 * loses his turn. In the case of doubles, when all four numbers cannot
+		 * be played, the player must play as many numbers as he can.
+		 */
 	}
-	
+
 	public Integer[] removeDuplicates(Integer[] arr) {
-		  return new HashSet<Integer>(Arrays.asList(arr)).toArray(new Integer[0]);
+		return new HashSet<Integer>(Arrays.asList(arr)).toArray(new Integer[0]);
 	}
 
 	public GameState checkWin() {
@@ -475,8 +559,10 @@ public class Board implements Cloneable {
 	}
 
 	/**
-	 * method to set who is currently playing and who is an opposite player ion
+	 * method to set who is currently playing and who is an opposite player in
 	 * terms of colors
+	 * 
+	 * also sets move amounts to -1 if black player is currently playing
 	 * 
 	 * @param isWhite
 	 *            Boolean, true means white playing, false means black is
@@ -494,10 +580,10 @@ public class Board implements Cloneable {
 			}
 		}
 	}
-	
-//	public void setCurrentPlayer(Color color) {
-//		this.currPlayer = color;
-//	}
+
+	// public void setCurrentPlayer(Color color) {
+	// this.currPlayer = color;
+	// }
 	/**
 	 * Method to check if there are valid moves left
 	 * 
@@ -509,7 +595,7 @@ public class Board implements Cloneable {
 			return false;
 		return true;
 	}
-	
+
 	/**
 	 * sets dices in case of a double, creates 4 dices
 	 * 
@@ -522,11 +608,11 @@ public class Board implements Cloneable {
 			this.dices = dices;
 		}
 	}
-	
+
 	public ArrayList<Integer> getPossibleMoves() {
 		return possibleMoves;
 	}
-	
+
 	public Color[] getColorArray() {
 		return colorArray;
 	}
@@ -534,11 +620,11 @@ public class Board implements Cloneable {
 	public int[] getAmountArray() {
 		return amountArray;
 	}
-	
+
 	public Color getCurrentPlayer() {
 		return this.currPlayer;
 	}
-	
+
 	public ArrayList<Move> getValidMoves() {
 		return this.validMoves;
 	}
