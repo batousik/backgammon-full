@@ -7,18 +7,15 @@ import game.Move;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,6 +32,11 @@ import simpleAI.AI;
 /**
  * @author 130017964
  * @version 4.20(release)
+ * 
+ * GUI Backgammon Rus 4.20
+ * 
+ * Bundles game logic, user input, ai logic, network connection together
+ * 
  */
 public class MainWindow extends JFrame implements ActionListener,
 		MouseListener, MouseMotionListener {
@@ -47,15 +49,16 @@ public class MainWindow extends JFrame implements ActionListener,
 	private static final int LEFT_BOUNDARY = 50;
 	private static final int RIGHT_BOUNDARY = 710;
 	private static final int TOP_BOUNDARY = 25;
-	private static final int BOTTOM_BOUNDARY= 570;
+	private static final int BOTTOM_BOUNDARY = 570;
 	private static final int PADDING = 10;
 	private static final int HORIZONTAL_HALFWAY = 300;
 	private static final int NUMBER_OF_STONES = 30;
 	private static final int STONE_SIZE = 40;
 	private static final int MAX_NO_PER_FIELD_NO_STACK = 6;
-	
+
 	// x coord, y coord, width, height
-	private static final int[] INFO_LABEL_BOUNDS = new int[] {350,560,100,20};
+	private static final int[] INFO_LABEL_BOUNDS = new int[] { 350, 560, 100,
+			20 };
 
 	/**
 	 * Configuring dices
@@ -64,9 +67,9 @@ public class MainWindow extends JFrame implements ActionListener,
 	private static final int DICE_X_COORD = 310;
 	private static final int DICE_Y_COORD = 280;
 	private static final int DICES_HORIZ_SPACE = 80;
-	
+
 	/**
-	 *  GUI objects
+	 * GUI objects
 	 */
 	private JPanel mainContentPane;
 	private JLayeredPane gamePanel;
@@ -86,19 +89,15 @@ public class MainWindow extends JFrame implements ActionListener,
 	private final ImageIcon whiteStoneImg = new ImageIcon("img/GoldNSH.gif");
 
 	/**
-	 * Creating Array of ImageIcon to store dice faces icons, 6 for each dice face
-	 * and 0 is empty for easier use of pics in a system
+	 * Creating Array of ImageIcon to store dice faces icons, 6 for each dice
+	 * face and 0 is empty for easier use of pics in a system
 	 */
 
-	
-	//TODO change pictures to see through
+	// TODO change pictures to see through
 	private final ImageIcon[] diceFaces = new ImageIcon[] {
-			new ImageIcon("empty"),
-			new ImageIcon("img/1.gif"),
-			new ImageIcon("img/2.gif"),
-			new ImageIcon("img/3.gif"),
-			new ImageIcon("img/4.gif"),
-			new ImageIcon("img/5.gif"),
+			new ImageIcon("empty"), new ImageIcon("img/1.gif"),
+			new ImageIcon("img/2.gif"), new ImageIcon("img/3.gif"),
+			new ImageIcon("img/4.gif"), new ImageIcon("img/5.gif"),
 			new ImageIcon("img/6.gif") };
 	/**
 	 * array to store the two dices
@@ -108,7 +107,7 @@ public class MainWindow extends JFrame implements ActionListener,
 	 * importing image for highlighting
 	 */
 	private final ImageIcon hihjLightImg = new ImageIcon("img/highlight.gif");
-	
+
 	private Object[] gameTypes = { "Local vs Human", "Local vs AI",
 			"Server AI", "Server Human", "Client AI", "Client Human" };
 	private String gameType;
@@ -119,6 +118,8 @@ public class MainWindow extends JFrame implements ActionListener,
 
 	// AI
 	simpleAI.AI simpleAi;
+	private boolean aiVShumanMode;
+	private boolean aiStarts;
 
 	// vars needed for stones
 	private int stoneDragged = NUMBER_OF_STONES;
@@ -193,25 +194,28 @@ public class MainWindow extends JFrame implements ActionListener,
 			gamePanel.setComponentZOrder(stones[i], 0);
 		}
 		/**
-		 *  creating dices representation
+		 * creating dices representation
 		 */
 		dices = new JLabel[2];
-		
+
 		for (int i = 0; i < dices.length; i++) {
 			dices[i] = new JLabel();
 			/**
 			 * 0 first time + horizontal space 2nd time through the loop
 			 */
-			dices[i].setBounds(DICE_X_COORD + (i*DICES_HORIZ_SPACE), DICE_Y_COORD, DICE_SIZE, DICE_SIZE);;
+			dices[i].setBounds(DICE_X_COORD + (i * DICES_HORIZ_SPACE),
+					DICE_Y_COORD, DICE_SIZE, DICE_SIZE);
+			;
 			dices[i].setVisible(true);
 			gamePanel.add(dices[i]);
 			gamePanel.setComponentZOrder(dices[i], 0);
 		}
 		// Creating information label
 		whosTurn = new JLabel();
-		whosTurn.setBounds(INFO_LABEL_BOUNDS[0], INFO_LABEL_BOUNDS[1], INFO_LABEL_BOUNDS[2], INFO_LABEL_BOUNDS[3]);
+		whosTurn.setBounds(INFO_LABEL_BOUNDS[0], INFO_LABEL_BOUNDS[1],
+				INFO_LABEL_BOUNDS[2], INFO_LABEL_BOUNDS[3]);
 		whosTurn.setVisible(true);
-//		whosTurn.;
+		// whosTurn.;
 		whosTurn.setForeground(Color.RED);
 		gamePanel.add(whosTurn);
 		gamePanel.setComponentZOrder(whosTurn, 1);
@@ -276,18 +280,19 @@ public class MainWindow extends JFrame implements ActionListener,
 		board = new Board();
 		// get who Starts
 		isWhite = board.getWhoStarts();
+		// by default ai off
+		aiVShumanMode = false;
+		// draw stones
+		placeStones(board.getAmountArray(), board.getColorArray());
 	}
 
 	/*
-	 * 1: throw dices
-	 * 2: change picture to represent them
-	 * 3: show whose turn is it
-	 * 4: set their result to the board
-	 * 5: reset stones on the board
-	 * 6: generate valid moves
+	 * 1: throw dices 2: change picture to represent them 3: show whose turn is
+	 * it 4: set their result to the board 5: reset stones on the board 6:
+	 * generate valid moves
 	 */
 
-	private void makeTurn() {
+	private void setUpMove() {
 		// throw and set dices for first move
 		dice.throwDices();
 		// change pictures on dices
@@ -299,6 +304,10 @@ public class MainWindow extends JFrame implements ActionListener,
 		board.setPlayers(isWhite);
 		// UPdating info label
 		whosTurn.setText(board.getCurrentPlayer().toString() + " TURN");
+		changeMoveCondition();
+	}
+
+	private void changeMoveCondition() {
 		// drawing stones to start locations
 		placeStones(board.getAmountArray(), board.getColorArray());
 		// evaluating first set of valid moves
@@ -306,9 +315,41 @@ public class MainWindow extends JFrame implements ActionListener,
 		isMovesLeft = board.hasValidMovesLeft();
 		// if no possible moves found change the player
 		if (!isMovesLeft) {
+			// change player
 			changePlayer();
-			makeTurn();
+			// for next player
+			setUpMove();
 		}
+
+		// if ai enabled
+		if (aiVShumanMode) {
+			// if ai turn
+			if (aiStarts == isWhite) {
+				aiTurn();
+			}
+		}
+	}
+
+	/**
+	 * Move made win check board state is changed redraw board, update moves in
+	 * case no moves left change player
+	 */
+	private void moveMade() {
+		// move the piece
+		board.move(chosenMove);
+
+		// redrawing board to keep stones nicely in the line
+		placeStones(board.getAmountArray(), board.getColorArray());
+
+		// check if game won
+		if (board.checkWin() != GameState.STILL_PLAYING) {
+			if (board.checkWin() == GameState.WHITE_WON) {
+				winMessage(game.Color.GOLD.toString());
+			} else {
+				winMessage(game.Color.SILVER.toString());
+			}
+		}
+		changeMoveCondition();
 	}
 
 	/**
@@ -316,12 +357,10 @@ public class MainWindow extends JFrame implements ActionListener,
 	 */
 	private void playLocalVsAI() {
 		if (isWhite) {
-			makeTurn();
+			setUpMove();
 		} else {
-			makeTurn();
-			simpleAi = new AI(board);
-			chosenMove = simpleAi.getChosenMove();
-			moveMade();
+			setUpMove();
+
 		}
 	}
 
@@ -341,40 +380,14 @@ public class MainWindow extends JFrame implements ActionListener,
 		}
 	}
 
-	/**
-	 * Move made win check board state is changed redraw board, update moves in
-	 * case no moves left change player
-	 */
-	private void moveMade() {
-		// move the piece
-		board.move(chosenMove);
-		// check if game won
-		if (board.checkWin() != GameState.STILL_PLAYING) {
-			if (board.checkWin() == GameState.WHITE_WON) {
-				winMessage(game.Color.GOLD.toString());
-			} else {
-				winMessage(game.Color.SILVER.toString());
-			}
-		}
-		// redrawing board to keep stones nicely in the line
-		placeStones(board.getAmountArray(), board.getColorArray());
-		// moves left recalculates valid moves and says if any left
-		board.searchForValidMoves();
-		isMovesLeft = board.hasValidMovesLeft();
-
-		// if no possible moves left change the player
-		if (!isMovesLeft) {
-			changePlayer();
-			makeTurn();
-		}
-	}
-
 	private void aiTurn() {
 		simpleAi = new AI(board);
 		chosenMove = simpleAi.getChosenMove();
+
 		moveMade();
+
 	}
-	
+
 	/**
 	 * Action listeners for menus
 	 */
@@ -385,15 +398,16 @@ public class MainWindow extends JFrame implements ActionListener,
 		}
 		// TODO About Window/Help
 		if (e.getSource() == help) {
-			JOptionPane.showMessageDialog(this, "Made by Bato-Bair Tsyrenov\n"
-					+ "Version 4.20\n" + "++Networking enabled++\n"
-					+ "++3 Ai-Levels++", "INFO",
-					JOptionPane.INFORMATION_MESSAGE, new ImageIcon("img/a.png"));
+			JOptionPane
+					.showMessageDialog(this, "Made by Bato-Bair Tsyrenov\n"
+							+ "Version 4.20\n" + "++Networking enabled++\n"
+							+ "++3 Ai-Levels++", "INFO",
+							JOptionPane.INFORMATION_MESSAGE, new ImageIcon(
+									"img/a.png"));
 		}
 
 		/**
-		 * Actual place to start a new game
-		 * Different options given
+		 * Actual place to start a new game Different options given
 		 */
 
 		if (e.getSource() == newGame) {
@@ -410,10 +424,17 @@ public class MainWindow extends JFrame implements ActionListener,
 				// TODO different AI dificulties
 				switch (gameType) {
 				case "Local vs Human":
-					makeTurn();
+					setUpMove();
 					break;
 				case "Local vs AI":
-					// TODO
+					setUpMove();
+					aiVShumanMode = true;
+
+					if (!isWhite) {
+						// then ai starts
+						aiStarts = true;
+						aiTurn();
+					}
 					break;
 				case "Server AI":
 					// TODO
@@ -433,20 +454,20 @@ public class MainWindow extends JFrame implements ActionListener,
 					// TODO
 					serverIP = (String) JOptionPane.showInputDialog(this,
 							"Please enter IP for the server", "Server IP",
-							JOptionPane.PLAIN_MESSAGE, new ImageIcon("img/a.png"),
-							null, "");
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon(
+									"img/a.png"), null, "");
 					serverPort = (String) JOptionPane.showInputDialog(this,
 							"Please enter PORT for the server", "Server PORT",
-							JOptionPane.PLAIN_MESSAGE, new ImageIcon("img/a.png"),
-							null, "");
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon(
+									"img/a.png"), null, "");
 					// TODO get who starts
 					break;
 				case "Client Human":
 					// TODO
 					serverIP = (String) JOptionPane.showInputDialog(this,
 							"Please enter IP for the server", "Server IP",
-							JOptionPane.PLAIN_MESSAGE, new ImageIcon("img/a.png"),
-							null, "");
+							JOptionPane.PLAIN_MESSAGE, new ImageIcon(
+									"img/a.png"), null, "");
 					serverPort = (String) JOptionPane.showInputDialog(this,
 							"Please enter PORT for the server", "Server PORT",
 							JOptionPane.PLAIN_MESSAGE, new ImageIcon("a.png"),
@@ -598,9 +619,12 @@ public class MainWindow extends JFrame implements ActionListener,
 	/**
 	 * Method nicely places stones from one field into their locations
 	 * 
-	 * @param fieldID representation of field in game arrays, its position 0-27
-	 * @param amount amount of stones on that field
-	 * @param picture picture of a stone, depends on color
+	 * @param fieldID
+	 *            representation of field in game arrays, its position 0-27
+	 * @param amount
+	 *            amount of stones on that field
+	 * @param picture
+	 *            picture of a stone, depends on color
 	 */
 	private void placeStonesOnAField(int fieldID, int amount, ImageIcon picture) {
 		// if more than MAX_NO_PER_FIELD_NO_STACK, then stack stones
@@ -642,51 +666,65 @@ public class MainWindow extends JFrame implements ActionListener,
 	// Creating zones for fields on a board for dropping stones
 	private void initFieldZones() {
 		zones = new HashMap<Integer, Zone>();
-		zones.put(0, new Zone(350, 399, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(1, new Zone(650, 699, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(2, new Zone(600, 649, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(3, new Zone(550, 599, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(4, new Zone(500, 549, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(5, new Zone(450, 499, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(6, new Zone(400, 449, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(7, new Zone(300, 349, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(8, new Zone(250, 299, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(9, new Zone(200, 249, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(10, new Zone(150, 199, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(11, new Zone(100, 149, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
-		zones.put(12, new Zone(50, 99, HORIZONTAL_HALFWAY+PADDING, BOTTOM_BOUNDARY));
+		zones.put(0, new Zone(350, 399, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(1, new Zone(650, 699, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(2, new Zone(600, 649, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(3, new Zone(550, 599, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(4, new Zone(500, 549, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(5, new Zone(450, 499, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(6, new Zone(400, 449, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(7, new Zone(300, 349, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(8, new Zone(250, 299, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(9, new Zone(200, 249, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(10, new Zone(150, 199, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(11, new Zone(100, 149, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
+		zones.put(12, new Zone(50, 99, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
 		// top of the board
 		zones.put(13, new Zone(50, 99, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - 1)));
-		zones.put(14,
-				new Zone(100, 149, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(15,
-				new Zone(150, 199, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(16,
-				new Zone(200, 249, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(17,
-				new Zone(250, 299, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(18,
-				new Zone(300, 349, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(19,
-				new Zone(400, 449, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(20,
-				new Zone(450, 499, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(21,
-				new Zone(500, 549, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(22,
-				new Zone(550, 599, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(23,
-				new Zone(600, 649, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(24,
-				new Zone(650, 699, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
-		zones.put(25,
-				new Zone(350, 399, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(14, new Zone(100, 149, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(15, new Zone(150, 199, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(16, new Zone(200, 249, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(17, new Zone(250, 299, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(18, new Zone(300, 349, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(19, new Zone(400, 449, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(20, new Zone(450, 499, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(21, new Zone(500, 549, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(22, new Zone(550, 599, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(23, new Zone(600, 649, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(24, new Zone(650, 699, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(25, new Zone(350, 399, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
 		// bear offs
 		// white top
-		zones.put(26,
-				new Zone(700, 749, TOP_BOUNDARY, (HORIZONTAL_HALFWAY - PADDING)));
+		zones.put(26, new Zone(700, 749, TOP_BOUNDARY,
+				(HORIZONTAL_HALFWAY - PADDING)));
 		// black bottom
-		zones.put(27, new Zone(700, 749, HORIZONTAL_HALFWAY + PADDING, BOTTOM_BOUNDARY));
+		zones.put(27, new Zone(700, 749, HORIZONTAL_HALFWAY + PADDING,
+				BOTTOM_BOUNDARY));
 	}
 
 	// Creating location for each field to place stones nicely
@@ -723,14 +761,17 @@ public class MainWindow extends JFrame implements ActionListener,
 		// black bottom
 		locations.put(27, new int[] { 705, 509 });
 	}
-	
+
 	/**
 	 * Creates pop-up window when someone wins
-	 * @param player player that won
+	 * 
+	 * @param player
+	 *            player that won
 	 */
-	private void winMessage(String player){
-		JOptionPane.showMessageDialog(this, player + " player Won", "End Of Game Message",
-				JOptionPane.INFORMATION_MESSAGE, new ImageIcon("img/a.png"));
+	private void winMessage(String player) {
+		JOptionPane.showMessageDialog(this, player + " player Won",
+				"End Of Game Message", JOptionPane.INFORMATION_MESSAGE,
+				new ImageIcon("img/a.png"));
 	}
 
 	@Override

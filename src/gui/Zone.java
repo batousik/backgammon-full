@@ -1,6 +1,12 @@
 package gui;
 
-
+/**
+ * 
+ * @author 130017964
+ * @version 4.20(release)
+ *
+ * Class allows to store zones for dropping objects for GUI Backgammon RUS 4.20
+ */
 public class Zone {
 	public final int LEFT;
 	public final int RIGHT;

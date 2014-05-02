@@ -1,5 +1,7 @@
 package main;
 
+import javax.swing.SwingUtilities;
+
 import game.Board;
 import gui.MainWindow;
 
@@ -20,6 +22,11 @@ public class Main {
 //		
 //		System.out.println("MAIN: " + board.getValidMoves());
 //		System.out.println("CLONE: " + boardClone.getValidMoves());
-		MainWindow mw = new MainWindow();
-	}
+		SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+            	MainWindow mw = new MainWindow();
+            	
+            }
+        });
+		}
 }

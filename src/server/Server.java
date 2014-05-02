@@ -10,7 +10,7 @@ import main.Main;
 public class Server {
 	private static int PORT_NUMBER = 5001;
 	private static String serverName = "127.0.0.1";
-	
+	static boolean firstMove = true;
 	// TODO This method should be static, we only ever have one connection. Don't refactor live code.
 	public static void connect(String serverName, boolean serverMode, Game game) {
 		if (!serverMode) {
@@ -27,7 +27,10 @@ public class Server {
 						output.print("newgame");
 					}
 					else {
-						game.play(null);
+						if (firstMove){
+							game.play(null);
+							firstMove = false;
+						}
 						output.print(AI.lastMoveMade);
 					}
 				}
